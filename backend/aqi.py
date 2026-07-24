@@ -1,42 +1,43 @@
 import requests
 
-from config import (
-    AQI_API_KEY,
-    WEATHER_CITY
-)
 
+def get_aqi_data(latitude, longitude, city_name):
 
-def get_aqi_data():
-    url = f"https://api.waqi.info/feed/{WEATHER_CITY}/"
+    url = "https://air-quality-api.open-meteo.com/v1/air-quality"
 
     params = {
-        "token": AQI_API_KEY
+        "latitude": latitude,
+        "longitude": longitude,
+        "current": (
+            "us_aqi,"
+            "pm2_5,"
+            "pm10,"
+            "carbon_monoxide,"
+            "nitrogen_dioxide,"
+            "ozone,"
+            "sulphur_dioxide"
+        ),
+        "timezone": "auto"
     }
 
     response = requests.get(url, params=params)
 
     if response.status_code != 200:
-        print("AQI API Error:", response.status_code)
+        print("Air Quality API Error:", response.status_code)
         print(response.text)
         return None
 
-    result = response.json()
+    data = response.json()
+    current = data.get("current", {})
 
-    if result.get("status") != "ok":
-        print("AQI API returned an error:", result)
-        return None
-
-    data = result["data"]
-
-    aqi_data = {
-        "city": data.get("city", {}).get("name"),
-        "aqi": data.get("aqi"),
-        "pm25": data.get("iaqi", {}).get("pm25", {}).get("v"),
-        "pm10": data.get("iaqi", {}).get("pm10", {}).get("v"),
-        "no2": data.get("iaqi", {}).get("no2", {}).get("v"),
-        "co": data.get("iaqi", {}).get("co", {}).get("v"),
-        "o3": data.get("iaqi", {}).get("o3", {}).get("v"),
-        "so2": data.get("iaqi", {}).get("so2", {}).get("v")
+    return {
+        "city": city_name,
+        "aqi": current.get("us_aqi"),
+        "pm25": current.get("pm2_5"),
+        "pm10": current.get("pm10"),
+        "no2": current.get("nitrogen_dioxide"),
+        "co": current.get("carbon_monoxide"),
+        "o3": current.get("ozone"),
+        "so2": current.get("sulphur_dioxide"),
+        "updated_at": current.get("time")
     }
-
-    return aqi_data

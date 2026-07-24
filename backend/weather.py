@@ -1,17 +1,15 @@
 import requests
 
-from config import (
-    WEATHER_API_KEY,
-    WEATHER_CITY,
-    WEATHER_COUNTRY
-)
+from config import WEATHER_API_KEY
 
 
-def get_weather_data():
+def get_weather_data(latitude, longitude, city_name):
+
     url = "https://api.openweathermap.org/data/2.5/weather"
 
     params = {
-        "q": f"{WEATHER_CITY},{WEATHER_COUNTRY}",
+        "lat": latitude,
+        "lon": longitude,
         "appid": WEATHER_API_KEY,
         "units": "metric"
     }
@@ -26,12 +24,13 @@ def get_weather_data():
     data = response.json()
 
     weather_data = {
-        "city": data["name"],
+        "city": city_name,
         "temperature": data["main"]["temp"],
         "humidity": data["main"]["humidity"],
         "pressure": data["main"]["pressure"],
         "wind_speed": data["wind"]["speed"],
-        "visibility": data.get("visibility")
+        "visibility": data.get("visibility"),
+        "description": data["weather"][0]["description"]
     }
 
     return weather_data
