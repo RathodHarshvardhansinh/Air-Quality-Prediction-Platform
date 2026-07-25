@@ -9,10 +9,19 @@ from cities import CITIES
 from location import get_city_coordinates
 from firebase_admin import auth
 from config import FIREBASE_WEB_API_KEY
-
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": "*"
+        }
+    }
+)
 
 @app.route("/")
 def home():
@@ -48,7 +57,7 @@ def weather():
     weather_data = get_weather_data(
         location["latitude"],
         location["longitude"],
-        location["name"]
+        city
     )
 
     if weather_data is None:
@@ -58,6 +67,91 @@ def weather():
 
     return jsonify(weather_data)
 
+@app.route("/location")
+def location():
+
+    latitude = request.args.get("latitude")
+    longitude = request.args.get("longitude")
+
+    if not latitude or not longitude:
+        return jsonify({
+            "error": "Latitude and longitude are required"
+        }), 400
+
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+
+    except ValueError:
+        return jsonify({
+            "error": "Invalid latitude or longitude"
+        }), 400
+
+    # Reverse geocoding API
+    url = "https://nominatim.openstreetmap.org/reverse"
+
+    params = {
+        "lat": latitude,
+        "lon": longitude,
+        "format": "json",
+        "zoom": 10,
+        "addressdetails": 1
+    }
+
+    headers = {
+        "User-Agent": "AirQualityPredictionPlatform/1.0"
+    }
+
+    try:
+
+        response = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=10
+        )
+
+        if response.status_code != 200:
+            return jsonify({
+                "error": "Unable to detect city"
+            }), 500
+
+        data = response.json()
+
+        address = data.get(
+            "address",
+            {}
+        )
+
+        city = (
+            address.get("city")
+            or address.get("town")
+            or address.get("village")
+            or address.get("municipality")
+            or address.get("county")
+        )
+
+        if not city:
+            return jsonify({
+                "error": "City not found"
+            }), 404
+
+        return jsonify({
+            "city": city,
+            "latitude": latitude,
+            "longitude": longitude
+        })
+
+    except requests.RequestException as error:
+
+        print(
+            "Location Request Error:",
+            error
+        )
+
+        return jsonify({
+            "error": "Unable to detect location"
+        }), 500
 
 @app.route("/aqi")
 def aqi():
@@ -79,7 +173,7 @@ def aqi():
     aqi_data = get_aqi_data(
         location["latitude"],
         location["longitude"],
-        location["name"]
+        city
     )
 
     if aqi_data is None:
