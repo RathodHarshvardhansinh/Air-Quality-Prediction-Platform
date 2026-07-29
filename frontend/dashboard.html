@@ -385,79 +385,65 @@
 
                     <div class="info-card traffic-card">
 
-                        <div class="card-header">
+    <div class="card-header">
 
-                            <div>
+        <div>
+            <span class="card-label">
+                SMART TRAFFIC
+            </span>
 
-                                <span class="card-label">
-                                    TRAFFIC CONDITIONS
-                                </span>
+            <h2>
+                🚗 Smart Traffic
+            </h2>
+        </div>
 
-                                <h2>
-                                    Traffic
-                                </h2>
-
-                            </div>
-
-                            <span class="traffic-icon">
-                                🚗
-                            </span>
-
-                        </div>
+    </div>
 
 
-                        <div class="traffic-main">
+    <div class="traffic-status-box">
 
-                            <div class="traffic-status-indicator">
+        <div class="traffic-circle" id="trafficCircle"></div>
 
-                                <span class="traffic-dot"></span>
+        <div>
 
-                                <strong id="trafficStatus">
-                                    Loading...
-                                </strong>
+            <h3 id="trafficStatus">
+                Loading...
+            </h3>
 
-                            </div>
+            <small>
+                Live Traffic Status
+            </small>
 
-                            <p>
-                                Current traffic conditions
-                            </p>
+        </div>
 
-                        </div>
-
-
-                        <div class="traffic-details">
-
-                            <div>
-
-                                <small>
-                                    Current Speed
-                                </small>
-
-                                <strong id="currentSpeed">
-                                    -- km/h
-                                </strong>
-
-                            </div>
+    </div>
 
 
-                            <div>
+    <div class="traffic-grid">
 
-                                <small>
-                                    Free Flow Speed
-                                </small>
+        <div class="traffic-item">
+            <span>Current Speed</span>
+            <strong id="currentSpeed">-- km/h</strong>
+        </div>
 
-                                <strong id="freeFlowSpeed">
-                                    -- km/h
-                                </strong>
+        <div class="traffic-item">
+            <span>Road Condition</span>
+            <strong id="roadCondition">--</strong>
+        </div>
 
-                            </div>
+        <div class="traffic-item">
+            <span>Travel Delay</span>
+            <strong id="travelDelay">-- min</strong>
+        </div>
 
-                        </div>
+        <div class="traffic-item">
+            <span>Best Time</span>
+            <strong id="bestTime">--</strong>
+        </div>
 
-                    </div>
+    </div>
 
-                </div>
-
+</div>
 
                 <!-- POLLUTANTS -->
 
@@ -468,7 +454,8 @@
                         <div>
 
                             <span class="card-label">
-                                AIR POLLUTANTS
+                                AIR 
+                            
                             </span>
 
                             <h2>

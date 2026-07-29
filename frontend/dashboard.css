@@ -768,82 +768,44 @@ body {
    TRAFFIC
 ================================= */
 
-.traffic-main {
-    margin-top: 30px;
+.traffic-status-box{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    margin:20px 0;
 }
 
-
-.traffic-status-indicator {
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
+.traffic-circle{
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#4CAF50;
+    box-shadow:0 0 10px rgba(76,175,80,.6);
 }
 
-
-.traffic-dot {
-    width: 12px;
-    height: 12px;
-
-    background: #f5b942;
-
-    border-radius: 50%;
-
-    box-shadow:
-        0 0 12px rgba(245, 185, 66, 0.4);
+.traffic-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+    margin-top:20px;
 }
 
-
-.traffic-status-indicator strong {
-    font-size: 20px;
+.traffic-item{
+    background:#f7f9fb;
+    border-radius:12px;
+    padding:15px;
 }
 
-
-.traffic-main p {
-    color: var(--muted);
-
-    font-size: 12px;
-
-    margin-top: 7px;
+.traffic-item span{
+    display:block;
+    font-size:13px;
+    color:#777;
+    margin-bottom:6px;
 }
 
-
-.traffic-details {
-    display: grid;
-
-    grid-template-columns:
-        1fr
-        1fr;
-
-    gap: 20px;
-
-    margin-top: 30px;
-
-    padding-top: 20px;
-
-    border-top: 1px solid var(--border);
-}
-
-
-.traffic-details div {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 7px;
-}
-
-
-.traffic-details small {
-    color: var(--muted);
-
-    font-size: 10px;
-}
-
-
-.traffic-details strong {
-    font-size: 18px;
+.traffic-item strong{
+    font-size:20px;
+    color:#111;
 }
 
 

@@ -124,7 +124,27 @@ const weatherPressure =
     document.getElementById("pressure");
 
     
+// =====================================
+// TRAFFIC ELEMENTS
+// =====================================
 
+const trafficStatus =
+    document.getElementById("trafficStatus");
+
+const currentSpeed =
+    document.getElementById("currentSpeed");
+
+const roadCondition =
+    document.getElementById("roadCondition");
+
+const travelDelay =
+    document.getElementById("travelDelay");
+
+const bestTime =
+    document.getElementById("bestTime");
+
+const trafficCircle =
+    document.getElementById("trafficCircle");
 
 // =====================================
 // AQI STATUS
@@ -374,6 +394,7 @@ async function loadWeather(city) {
         }
 
 
+
         // =================================
         // UPDATE WEATHER
         // =================================
@@ -451,10 +472,128 @@ async function loadWeather(city) {
 
 }
 
+// =====================================
+// TRAFFIC STATUS
+// =====================================
+
+function getTrafficStatus(currentSpeed, freeFlowSpeed){
+
+    const ratio = currentSpeed / freeFlowSpeed;
+
+    if(ratio >= 0.85){
+
+        return{
+            status:"🟢 Light",
+            road:"Smooth Flow",
+            delay:"0 min",
+            best:"Now ✅",
+            color:"#2ecc71"
+        };
+
+    }
+
+    if(ratio >= 0.60){
+
+        return{
+            status:"🟡 Moderate",
+            road:"Busy",
+            delay:"3-5 min",
+            best:"Good Time",
+            color:"#f1c40f"
+        };
+
+    }
+
+    return{
+
+        status:"🔴 Heavy",
+        road:"Congested",
+        delay:"10+ min",
+        best:"Avoid Peak",
+        color:"#e74c3c"
+
+    };
+
+}
+
+
+// =====================================
+// LOAD TRAFFIC
+// =====================================
+
+async function loadTraffic(city){
+
+    if(!city) return;
+
+    try{
+
+        const response =
+        await fetch(
+        `http://127.0.0.1:5000/traffic?city=${encodeURIComponent(city)}`
+        );
+
+        const data =
+        await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+                data.error || "Unable to fetch traffic"
+            );
+
+        }
+
+       const traffic =
+getTrafficStatus(
+    data.current_speed,
+    data.free_flow_speed
+);
+
+        trafficStatus.textContent =
+        traffic.status;
+
+        trafficCircle.style.backgroundColor =
+        traffic.color;
+
+        currentSpeed.textContent =
+        `${data.current_speed} km/h`;
+
+        roadCondition.textContent =
+        traffic.road;
+
+        travelDelay.textContent =
+        traffic.delay;
+
+        bestTime.textContent =
+        traffic.best;
+
+        console.log("Traffic Loaded",data);
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        trafficStatus.textContent="Unavailable";
+
+        trafficCircle.style.backgroundColor="#9ca3af";
+
+        currentSpeed.textContent="-- km/h";
+
+        roadCondition.textContent="--";
+
+        travelDelay.textContent="-- min";
+
+        bestTime.textContent="--";
+
+    }
+
+}
 
 // =====================================
 // LOAD CITY DATA
-// AQI + WEATHER
+// AQI + WEATHER + TRAFFIC
 // =====================================
 
 function loadCityData(city) {
@@ -463,20 +602,16 @@ function loadCityData(city) {
         return;
     }
 
-    console.log(
-        "Loading data for:",
-        city
-    );
-
-
-    // Load AQI
+    console.log("Loading data for:", city);
 
     loadAQI(city);
 
-
-    // Load Weather
-
     loadWeather(city);
+
+    console.log("Calling loadTraffic...");
+    console.log(loadTraffic);
+
+    loadTraffic(city);
 
 }
 
