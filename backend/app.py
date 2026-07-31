@@ -10,6 +10,10 @@ from location import get_city_coordinates
 from firebase_admin import auth
 from config import FIREBASE_WEB_API_KEY
 from flask_cors import CORS
+from database import create_database
+from save_data import save_environment_data
+from database import get_history
+from database import get_city_hourly_history
 
 app = Flask(__name__)
 CORS(app)
@@ -279,6 +283,21 @@ def environment():
         "traffic": traffic_data
     })
 
+@app.route("/history/24h")
+def history_24h():
+
+    city = request.args.get("city")
+
+    if not city:
+        return jsonify({
+            "error": "Please provide a city"
+        }), 400
+
+    data = get_city_hourly_history(
+        city
+    )
+
+    return jsonify(data)
 
 @app.route("/firebase-test")
 def firebase_test():
@@ -459,7 +478,88 @@ def profile():
     except Exception as e:
         return jsonify({
             "error": "Invalid or expired token"
-        }), 401       
+        }), 401     
+        
+@app.route("/save-data")
+def save_data():
+
+    city = request.args.get("city")
+
+    if not city:
+        return jsonify({
+            "error": "Please provide a city"
+        }), 400
+
+    # Get City Coordinates
+    location = get_city_coordinates(city)
+
+    if location is None:
+        return jsonify({
+            "error": "City not found"
+        }), 404
+
+    latitude = location["latitude"]
+    longitude = location["longitude"]
+    city_name = location["name"]
+
+    # AQI
+    aqi = get_aqi_data(
+        latitude,
+        longitude,
+        city_name
+    )
+
+    # Weather
+    weather = get_weather_data(
+        latitude,
+        longitude,
+        city_name
+    )
+
+    # Traffic
+    traffic = get_traffic_data(
+        latitude,
+        longitude,
+        city_name
+    )
+
+    if not aqi or not weather or not traffic:
+        return jsonify({
+            "error": "Unable to fetch live data"
+        }), 500
+
+    # Save into SQLite
+    save_environment_data(
+
+        city=city_name,
+
+        aqi=aqi["aqi"],
+
+        temperature=weather["temperature"],
+
+        humidity=weather["humidity"],
+
+        pressure=weather["pressure"],
+
+        wind_speed=weather["wind_speed"],
+
+        traffic_speed=traffic["current_speed"],
+
+        free_flow_speed=traffic["free_flow_speed"]
+
+    )
+
+    return jsonify({
+        "message": "Data Saved Successfully"
+    })
+
+@app.route("/history")
+def history():
+
+    data = get_history()
+
+    return jsonify(data)
 
 if __name__ == "__main__":
+    create_database()
     app.run(debug=True)

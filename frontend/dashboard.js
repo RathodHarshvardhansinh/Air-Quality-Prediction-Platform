@@ -868,3 +868,155 @@ function loadFallbackCity() {
 // =====================================
 
 detectUserLocation();
+loadHistory();
+
+async function loadHistory() {
+
+    try {
+
+        const response =
+            await fetch(
+                "http://127.0.0.1:5000/history"
+            );
+
+        const data =
+            await response.json();
+
+        const tbody =
+            document.getElementById(
+                "historyTableBody"
+            );
+
+        tbody.innerHTML = "";
+
+        data.slice(0, 10).forEach(row => {
+
+            const tr =
+                document.createElement("tr");
+
+            tr.innerHTML = `
+
+                <td>${row.timestamp}</td>
+
+                <td>${row.city}</td>
+
+                <td>${row.aqi}</td>
+
+                <td>${row.temperature}°C</td>
+
+                <td>${row.humidity}%</td>
+
+                <td>${row.traffic_speed} km/h</td>
+
+            `;
+
+            tbody.appendChild(tr);
+
+        });
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+    }
+
+    function minutesAgo(timestamp){
+
+    const now = new Date();
+
+    const old = new Date(timestamp);
+
+    const diff =
+        Math.floor(
+            (now-old)/60000
+        );
+
+    if(diff<60){
+
+        return diff+" min ago";
+
+    }
+
+    return Math.floor(diff/60)+" hr ago";
+
+}
+
+    
+
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const openBtn = document.getElementById("openAnalytics");
+    const closeBtn = document.getElementById("closeAnalytics");
+    const overlay = document.getElementById("analyticsOverlay");
+
+    if (openBtn) {
+
+        openBtn.addEventListener("click", () => {
+
+            overlay.classList.add("active");
+
+            document.getElementById("analyticsAQI").innerText =
+aqiValue.innerText;
+
+document.getElementById("analyticsTemp").innerText =
+temperature.innerText;
+
+document.getElementById("analyticsTraffic").innerText =
+currentSpeed.innerText;
+
+document.getElementById("analyticsHumidity").innerText =
+humidity.innerText;
+
+document.getElementById("analyticsAQIStatus").innerText =
+aqiStatus.innerText;
+
+            document.body.style.overflow = "hidden";
+
+        });
+
+    }
+
+    if (closeBtn) {
+
+        closeBtn.addEventListener("click", () => {
+
+            overlay.classList.remove("active");
+
+            document.body.style.overflow = "auto";
+
+        });
+
+    }
+
+    // Close when clicking outside the panel
+    overlay.addEventListener("click", (e) => {
+
+        if (e.target === overlay) {
+
+            overlay.classList.remove("active");
+
+            document.body.style.overflow = "auto";
+
+        }
+
+    });
+
+    // Close with ESC key
+    document.addEventListener("keydown", (e) => {
+
+        if (e.key === "Escape") {
+
+            overlay.classList.remove("active");
+
+            document.body.style.overflow = "auto";
+
+        }
+
+    });
+
+});

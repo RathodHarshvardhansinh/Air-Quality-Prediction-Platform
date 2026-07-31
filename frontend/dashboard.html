@@ -44,8 +44,14 @@
                     Traffic
                 </a>
 
+                <a href="history.html" class="nav-item">
+                     <span>🕒</span>
+                     History
+                </a>
+
             </nav>
 
+        
             <div class="sidebar-bottom">
 
                 <a href="#" class="nav-item">
@@ -445,6 +451,8 @@
 
 </div>
 
+
+
                 <!-- POLLUTANTS -->
 
                 <div class="pollutants-card">
@@ -508,6 +516,135 @@
                     </div>
 
                 </div>
+     <!-- RECENT HISTORY -->
+
+<div class="graph-card">
+
+    <div class="graph-header">
+
+        <div>
+
+    
+
+        </div>
+
+    </div>
+
+
+</div>
+
+<!-- ===================================== -->
+<!-- RECENT ACTIVITY -->
+<!-- ===================================== -->
+
+<div class="activity-card">
+
+    <div class="activity-header">
+
+    <div id="activityContainer">
+
+        <div class="loading">
+
+           <div class="activity-item">
+
+    <div class="activity-left">
+
+        <div class="activity-time">2 min ago</div>
+
+        <div class="activity-city">📍 Ahmedabad</div>
+
+    </div>
+
+    <div class="activity-right">
+
+        <span>🟡 AQI 86</span>
+
+        <span>🌡 32°C</span>
+
+        <span>🚗 24 km/h</span>
+
+    </div>
+
+</div>
+
+<div
+id="analyticsModal"
+class="analytics-modal">
+
+<div class="analytics-content">
+
+<button
+id="closeAnalytics">
+
+✕
+
+</button>
+
+<h2>
+
+📈 24 Hour Analytics
+
+</h2>
+
+<div id="analyticsChart">
+
+Coming Soon...
+
+</div>
+
+</div>
+
+</div>
+
+<div class="activity-item">
+
+    <div class="activity-left">
+
+        <div class="activity-time">1 hr ago</div>
+
+        <div class="activity-city">📍 Ahmedabad</div>
+
+    </div>
+
+    <div class="activity-right">
+
+        <span>🟢 AQI 72</span>
+
+        <span>🌡 31°C</span>
+
+        <span>🚗 30 km/h</span>
+
+    </div>
+
+</div>
+
+<div class="activity-item">
+
+    <div class="activity-left">
+
+        <div class="activity-time">2 hr ago</div>
+
+        <div class="activity-city">📍 Ahmedabad</div>
+
+    </div>
+
+    <div class="activity-right">
+
+        <span>🟠 AQI 115</span>
+
+        <span>🌡 33°C</span>
+
+        <span>🚗 20 km/h</span>
+
+    </div>
+
+</div>
+
+        </div>
+
+    </div>
+
+</div>
 
             </section>
 
@@ -517,6 +654,116 @@
 
 
     <script src="dashboard.js"></script>
+
+<button id="openAnalytics" class="analytics-fab">
+
+    📊 Explore Analytics
+
+</button>
+
+<div id="analyticsOverlay">
+
+    <div id="analyticsPanel">
+
+        <div class="analytics-header">
+
+            <h1>🌍 Environmental Analytics</h1>
+
+            <p>AI Powered Air Intelligence</p>
+
+        </div>
+
+        <button id="closeAnalytics">
+
+            ✕
+
+        </button>
+
+        <div class="analytics-body">
+
+<div class="analytics-grid">
+
+<div class="stat-card">
+
+<h3>AQI</h3>
+
+<h1 id="analyticsAQI">--</h1>
+
+<p id="analyticsAQIStatus">
+
+Loading...
+
+</p>
+
+</div>
+
+<div class="stat-card">
+
+<h3>Temperature</h3>
+
+<h1 id="analyticsTemp">--°</h1>
+
+<p>
+
+Current Weather
+
+</p>
+
+</div>
+
+<div class="stat-card">
+
+<h3>Traffic</h3>
+
+<h1 id="analyticsTraffic">--</h1>
+
+<p>
+
+Road Speed
+
+</p>
+
+</div>
+
+<div class="stat-card">
+
+<h3>Humidity</h3>
+
+<h1 id="analyticsHumidity">--%</h1>
+
+<p>
+
+Current
+
+</p>
+
+</div>
+
+</div>
+
+<div class="graph-placeholder">
+
+📈
+
+<h2>
+
+Live Analytics
+
+</h2>
+
+<p>
+
+Interactive charts will appear here
+
+</p>
+
+</div>
+
+</div>
+
+    </div>
+
+</div>
 
 </body>
 
