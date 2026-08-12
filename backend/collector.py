@@ -95,6 +95,8 @@ def collect_city_data(city):
 
 if __name__ == "__main__":
 
+    COLLECTION_INTERVAL = 60
+
     while True:
 
         print("\n==============================")
@@ -107,6 +109,9 @@ if __name__ == "__main__":
 
         print("\nAll cities collected.")
 
-        print("Waiting 1 hour before next collection...\n")
+        print(
+            f"\nWaiting {COLLECTION_INTERVAL // 60} minutes "
+            "before next collection...\n"
+        )
 
-        COLLECTION_INTERVAL = 60
+        time.sleep(COLLECTION_INTERVAL)

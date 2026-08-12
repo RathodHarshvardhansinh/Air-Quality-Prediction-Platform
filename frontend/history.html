@@ -329,7 +329,7 @@
     padding:10px;
 }
 
-        }
+        
 
         /* RECENTLY VIEWED */
 
@@ -752,6 +752,28 @@
 
     </div>
 
+    <div class="chart-card">
+
+    <div class="chart-header">
+
+        <div>
+            <h2>🌡 Temperature Trend</h2>
+
+            <p>
+                Historical temperature data
+            </p>
+        </div>
+
+    </div>
+
+    <div class="chart-container">
+
+        <canvas id="temperatureChart"></canvas>
+
+    </div>
+
+</div>
+
 
 
     <!-- RECENTLY VIEWED -->
@@ -900,9 +922,15 @@ function changeRange(button, range){
    SELECTED CITY
 ----------------------------- */
 
-const selectedCity =
-    localStorage.getItem("lastCity");
+const urlParams = new URLSearchParams(
+    window.location.search
+);
 
+const urlCity = urlParams.get("city");
+
+const selectedCity =
+    urlCity ||
+    localStorage.getItem("lastCity");
 
 if (selectedCity) {
 
@@ -1033,7 +1061,8 @@ loadRecentlyViewed();
 async function loadHistoricalData() {
 
     const city =
-        localStorage.getItem("lastCity");
+    urlCity ||
+    localStorage.getItem("lastCity");
 
     if (!city) {
 
@@ -1203,17 +1232,22 @@ window.aqiHistoryChart =
 
                     fill: true,
 
-                    pointRadius: 5,
+                    pointRadius: 4,
 
-                    pointHoverRadius: 8,
+                    pointHoverRadius: 7,
 
                     borderColor: "#60a5fa",
 
                     backgroundColor:
-                        "rgba(96,165,250,0.12)",
+                        "rgba(96,165,250,0.10)",
 
                     pointBackgroundColor:
-                        "#60a5fa"
+                        "#60a5fa",
+
+                    pointBorderColor:
+                        "#0b1220",
+
+                    pointBorderWidth: 2
 
                 }
 
@@ -1237,7 +1271,7 @@ window.aqiHistoryChart =
 
             animation: {
 
-                duration: 1600,
+                duration: 1400,
 
                 easing: "easeOutQuart"
 
@@ -1254,26 +1288,50 @@ window.aqiHistoryChart =
                 tooltip: {
 
                     backgroundColor:
-                        "#0b1220",
+                        "rgba(8,15,28,.96)",
+
+                    titleColor: "#ffffff",
+
+                    bodyColor: "#cbd5e1",
 
                     borderColor:
-                        "#26334b",
+                        "rgba(96,165,250,.35)",
 
                     borderWidth: 1,
 
-                    padding: 12,
+                    padding: 14,
 
                     displayColors: false,
 
+                    cornerRadius: 12,
+
                     callbacks: {
+
+                        title: function(context) {
+
+                            return context[0].label;
+
+                        },
 
                         label: function(context) {
 
-                            return (
-                                " AQI: "
-                                +
-                                context.parsed.y
-                            );
+                            const index =
+                                context.dataIndex;
+
+                            const row =
+                                data[index];
+
+                            return [
+
+                                `AQI: ${row.aqi}`,
+
+                                `Temperature: ${row.temperature}°C`,
+
+                                `Humidity: ${row.humidity}%`,
+
+                                `Traffic: ${row.traffic_speed} km/h`
+
+                            ];
 
                         }
 
@@ -1295,7 +1353,13 @@ window.aqiHistoryChart =
 
                     ticks: {
 
-                        color: "#718096"
+                        color: "#718096",
+
+                        maxRotation: 0,
+
+                        autoSkip: true,
+
+                        maxTicksLimit: 8
 
                     }
 
@@ -1316,7 +1380,9 @@ window.aqiHistoryChart =
 
                     ticks: {
 
-                        color: "#718096"
+                        color: "#718096",
+
+                        stepSize: 25
 
                     },
 
@@ -1338,7 +1404,243 @@ window.aqiHistoryChart =
 
     });
 
+
+/* -------------------------
+   TEMPERATURE CHART
+------------------------- */
+
+const temperatureCanvas =
+    document.getElementById("temperatureChart");
+
+
+const temperatureData =
+    data.map(row =>
+        Number(row.temperature)
+    );
+
+
+if (temperatureCanvas) {
+
+    if (window.temperatureHistoryChart) {
+
+        window.temperatureHistoryChart.destroy();
+
     }
+
+
+    window.temperatureHistoryChart =
+        new Chart(
+            temperatureCanvas,
+            {
+
+                type: "line",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Temperature",
+
+                            data:
+                                temperatureData,
+
+                            borderWidth: 3,
+
+                            tension: 0.4,
+
+                            fill: true,
+
+                            pointRadius: 4,
+
+                            pointHoverRadius: 7,
+
+                            borderColor:
+                                "#f59e0b",
+
+                            backgroundColor:
+                                "rgba(245,158,11,0.10)",
+
+                            pointBackgroundColor:
+                                "#f59e0b",
+
+                            pointBorderColor:
+                                "#0b1220",
+
+                            pointBorderWidth: 2
+
+                        }
+
+                    ]
+
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    interaction: {
+
+                        intersect: false,
+
+                        mode: "index"
+
+                    },
+
+
+                    animation: {
+
+                        duration: 1400,
+
+                        easing:
+                            "easeOutQuart"
+
+                    },
+
+
+                    plugins: {
+
+                        legend: {
+
+                            display: false
+
+                        },
+
+
+                        tooltip: {
+
+                            backgroundColor:
+                                "rgba(8,15,28,.96)",
+
+                            titleColor:
+                                "#ffffff",
+
+                            bodyColor:
+                                "#cbd5e1",
+
+                            borderColor:
+                                "rgba(245,158,11,.35)",
+
+                            borderWidth: 1,
+
+                            padding: 14,
+
+                            displayColors: false,
+
+                            cornerRadius: 12,
+
+
+                            callbacks: {
+
+                                title:
+                                    function(context) {
+
+                                        return context[0]
+                                            .label;
+
+                                    },
+
+
+                                label:
+                                    function(context) {
+
+                                        const index =
+                                            context.dataIndex;
+
+                                        const row =
+                                            data[index];
+
+                                        return [
+
+                                            `Temperature: ${row.temperature}°C`,
+
+                                            `AQI: ${row.aqi}`,
+
+                                            `Humidity: ${row.humidity}%`
+
+                                        ];
+
+                                    }
+
+                            }
+
+                        }
+
+                    },
+
+
+                    scales: {
+
+                        x: {
+
+                            grid: {
+
+                                display: false
+
+                            },
+
+                            ticks: {
+
+                                color:
+                                    "#718096",
+
+                                maxRotation: 0,
+
+                                autoSkip: true,
+
+                                maxTicksLimit: 8
+
+                            }
+
+                        },
+
+
+                        y: {
+
+                            grid: {
+
+                                color:
+                                    "rgba(255,255,255,.06)"
+
+                            },
+
+                            ticks: {
+
+                                color:
+                                    "#718096"
+
+                            },
+
+                            title: {
+
+                                display: true,
+
+                                text:
+                                    "Temperature (°C)",
+
+                                color:
+                                    "#8793ab"
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+}
 
     catch (error) {
 
