@@ -8,29 +8,9 @@ import time
 
 CITIES = [
 
-    "Ahmedabad",
-    "Surat",
-    "Vadodara",
-    "Rajkot",
+    
     "Visnagar",
 
-    "Mumbai",
-    "Pune",
-    "Delhi",
-    "Jaipur",
-    "Lucknow",
-
-    "Indore",
-    "Bhopal",
-    "Nagpur",
-    "Hyderabad",
-    "Bangalore",
-
-    "Chennai",
-    "Kolkata",
-    "Patna",
-    "Chandigarh",
-    "Udaipur"
 
 ]
 
