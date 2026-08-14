@@ -1,4 +1,5 @@
 import requests
+
 from flask import Flask, jsonify, request
 
 from weather import get_weather_data
@@ -14,6 +15,7 @@ from database import create_database
 from save_data import save_environment_data
 from database import get_history
 from database import get_city_hourly_history
+from prediction import get_predictions
 
 app = Flask(__name__)
 CORS(app)
@@ -551,6 +553,81 @@ def save_data():
 
     return jsonify({
         "message": "Data Saved Successfully"
+    })
+
+# =====================================
+# 1-HOUR AQI PREDICTION
+# =====================================
+
+@app.route("/predict/1h")
+def predict_1h():
+
+    city = request.args.get("city")
+
+    if not city:
+
+        return jsonify({
+            "error": "Please provide a city"
+        }), 400
+
+
+    predictions = get_predictions(city)
+
+
+    if predictions is None:
+
+        return jsonify({
+            "error": "Not enough historical data"
+        }), 400
+
+
+    return jsonify({
+
+        "city": predictions["city"],
+
+        "prediction_hours": 1,
+
+        "predicted_aqi":
+            predictions["prediction_1h"]
+
+    })
+
+
+# =====================================
+# 6-HOUR AQI PREDICTION
+# =====================================
+
+@app.route("/predict/6h")
+def predict_6h():
+
+    city = request.args.get("city")
+
+    if not city:
+
+        return jsonify({
+            "error": "Please provide a city"
+        }), 400
+
+
+    predictions = get_predictions(city)
+
+
+    if predictions is None:
+
+        return jsonify({
+            "error": "Not enough historical data"
+        }), 400
+
+
+    return jsonify({
+
+        "city": predictions["city"],
+
+        "prediction_hours": 6,
+
+        "predicted_aqi":
+            predictions["prediction_6h"]
+
     })
 
 @app.route("/history")

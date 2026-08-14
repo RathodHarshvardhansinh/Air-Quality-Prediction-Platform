@@ -52,23 +52,30 @@ def collect_city_data(city):
 
     save_environment_data(
 
-        city=city_name,
+    city=city_name,
 
-        aqi=aqi["aqi"],
+    aqi=aqi["aqi"],
 
-        temperature=weather["temperature"],
+    pm25=aqi["pm25"],
+    pm10=aqi["pm10"],
+    no2=aqi["no2"],
+    co=aqi["co"],
+    o3=aqi["o3"],
+    so2=aqi["so2"],
 
-        humidity=weather["humidity"],
+    temperature=weather["temperature"],
 
-        pressure=weather["pressure"],
+    humidity=weather["humidity"],
 
-        wind_speed=weather["wind_speed"],
+    pressure=weather["pressure"],
 
-        traffic_speed=traffic["current_speed"],
+    wind_speed=weather["wind_speed"],
 
-        free_flow_speed=traffic["free_flow_speed"]
+    traffic_speed=traffic["current_speed"],
 
-    )
+    free_flow_speed=traffic["free_flow_speed"]
+
+)
 
     print(f"✔ Saved {city_name}")
 
