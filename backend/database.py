@@ -116,8 +116,7 @@ def get_city_history(city, limit=24):
 
     return [dict(row) for row in rows]
 
-def get_city_hourly_history(city, hours=24):
-
+def get_city_history_by_range(city, hours):
     connection = sqlite3.connect(DATABASE)
 
     connection.row_factory = sqlite3.Row
@@ -127,25 +126,66 @@ def get_city_hourly_history(city, hours=24):
     cursor.execute(
         """
         SELECT
-           city,
-           aqi,
-           temperature,
-           humidity,
-           pressure,
-           wind_speed,
-           traffic_speed,
-           free_flow_speed,
-           timestamp
+            city,
+            aqi,
+            temperature,
+            humidity,
+            pressure,
+            wind_speed,
+            traffic_speed,
+            free_flow_speed,
+            timestamp
 
         FROM environment_data
 
         WHERE LOWER(city) = LOWER(?)
 
-        AND timestamp >= datetime('now', '-24 hours')
+        AND timestamp >= datetime('now', ?)
 
         ORDER BY timestamp ASC
         """,
-        (city,)
+        (
+            city,
+            f"-{hours} hours"
+        )
+    )
+
+    rows = cursor.fetchall()
+
+    connection.close()
+
+    return [dict(row) for row in rows]
+
+def get_city_range_history(city, hours):
+    connection = sqlite3.connect(DATABASE)
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            city,
+            aqi,
+            pm25,
+            pm10,
+            no2,
+            co,
+            o3,
+            so2,
+            temperature,
+            humidity,
+            pressure,
+            wind_speed,
+            traffic_speed,
+            free_flow_speed,
+            timestamp
+        FROM environment_data
+        WHERE LOWER(city) = LOWER(?)
+        AND timestamp >= datetime('now', ?)
+        ORDER BY timestamp ASC
+        """,
+        (city, f"-{hours} hours")
     )
 
     rows = cursor.fetchall()

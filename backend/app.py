@@ -11,11 +11,15 @@ from location import get_city_coordinates
 from firebase_admin import auth
 from config import FIREBASE_WEB_API_KEY
 from flask_cors import CORS
+
 from database import create_database
 from save_data import save_environment_data
 from database import get_history
-from database import get_city_hourly_history
+
 from prediction import get_predictions
+from database import get_city_range_history
+
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -184,7 +188,7 @@ def aqi():
 
     if aqi_data is None:
         return jsonify({
-            "error": "Unable to fetch air quality data"
+            "error": "Unable to fetch AQI data"
         }), 500
 
     return jsonify(aqi_data)
@@ -210,7 +214,7 @@ def traffic():
     traffic_data = get_traffic_data(
         location["latitude"],
         location["longitude"],
-        location["name"]
+        city
     )
 
     if traffic_data is None:
@@ -285,21 +289,6 @@ def environment():
         "traffic": traffic_data
     })
 
-@app.route("/history/24h")
-def history_24h():
-
-    city = request.args.get("city")
-
-    if not city:
-        return jsonify({
-            "error": "Please provide a city"
-        }), 400
-
-    data = get_city_hourly_history(
-        city
-    )
-
-    return jsonify(data)
 
 @app.route("/firebase-test")
 def firebase_test():
@@ -315,9 +304,62 @@ def firebase_test():
 @app.route("/save-environment")
 def save_environment():
 
-    weather_data = get_weather_data()
-    aqi_data = get_aqi_data()
-    traffic_data = get_traffic_data()
+    city = request.args.get("city")
+
+    if not city:
+        return jsonify({
+            "error": "Please provide a city"
+        }), 400
+
+
+    # =====================================
+    # GET CITY COORDINATES
+    # =====================================
+
+    location = get_city_coordinates(city)
+
+    if location is None:
+        return jsonify({
+            "error": "City not found"
+        }), 404
+
+
+    latitude = location["latitude"]
+    longitude = location["longitude"]
+
+
+    # =====================================
+    # FETCH WEATHER
+    # =====================================
+
+    weather_data = get_weather_data(
+        latitude,
+        longitude,
+        city
+    )
+
+
+    # =====================================
+    # FETCH AQI
+    # =====================================
+
+    aqi_data = get_aqi_data(
+    latitude,
+    longitude,
+    city
+)
+    
+
+    # =====================================
+    # FETCH TRAFFIC
+    # =====================================
+
+    traffic_data = get_traffic_data(
+        latitude,
+        longitude,
+        city
+    )
+
 
     if weather_data is None:
         return jsonify({
@@ -334,20 +376,64 @@ def save_environment():
             "error": "Unable to fetch traffic data"
         }), 500
 
+
+    # =====================================
+    # FIREBASE DATA
+    # =====================================
+
     environment_data = {
+
+        "city": city,
+
         "weather": weather_data,
+
         "air_quality": aqi_data,
+
         "traffic": traffic_data,
-        "updated_at": datetime.now().isoformat()
+
+        "updated_at":
+            datetime.now().isoformat()
+
     }
 
-    db.collection("environment_data").document("current").set(
+
+    db.collection(
+        "environment_data"
+    ).document("current").set(
         environment_data
     )
 
+
+    # =====================================
+    # DEBUG OUTPUT
+    # =====================================
+
+    print("\n==============================")
+    print("WEATHER DATA:")
+    print(weather_data)
+
+    print("\nAQI DATA:")
+    print(aqi_data)
+
+    print("\nTRAFFIC DATA:")
+    print(traffic_data)
+    print("==============================\n")
+
+
     return jsonify({
-        "message": "Environment data saved to Firebase",
-        "data": environment_data
+
+        "message":
+            "Environment data fetched successfully",
+
+        "city":
+            city,
+
+        "firebase":
+            "saved",
+
+        "data":
+            environment_data
+
     })
 
 @app.route("/register", methods=["POST"])
@@ -637,6 +723,54 @@ def history():
 
     return jsonify(data)
 
+
+@app.route("/history/<period>")
+def history_period(period):
+
+    city = request.args.get("city")
+
+    if not city:
+        return jsonify({
+            "error": "City is required"
+        }), 400
+
+    if period == "24h":
+        hours = 24
+
+    elif period == "7d":
+        hours = 24 * 7
+
+    elif period == "30d":
+        hours = 24 * 30
+
+    else:
+        return jsonify({
+            "error": "Invalid period"
+        }), 400
+
+    try:
+
+        data = get_city_range_history(
+            city,
+            hours
+        )
+
+        return jsonify(data)
+
+    except Exception as error:
+
+        print("History error:", error)
+
+        return jsonify({
+            "error": str(error)
+        }), 500
+
+
 if __name__ == "__main__":
+
     create_database()
-    app.run(debug=True)
+
+    app.run(
+        debug=True,
+        port=5000
+    )

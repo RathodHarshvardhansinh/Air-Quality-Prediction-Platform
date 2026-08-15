@@ -85,8 +85,9 @@ def build_features(city):
         return None
 
     df["timestamp"] = pd.to_datetime(
-        df["timestamp"]
-    )
+    df["timestamp"],
+    format="mixed"
+)
 
     df = df.sort_values(
         "timestamp"

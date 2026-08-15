@@ -82,7 +82,7 @@ def collect_city_data(city):
 
 if __name__ == "__main__":
 
-    COLLECTION_INTERVAL = 60
+    COLLECTION_INTERVAL = 3600
 
     while True:
 
