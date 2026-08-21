@@ -12,3 +12,5 @@ AQI_API_KEY = os.getenv("AQI_API_KEY")
 TRAFFIC_API_KEY = os.getenv("TRAFFIC_API_KEY")
 
 FIREBASE_WEB_API_KEY = os.getenv("FIREBASE_WEB_API_KEY")
+
+CPCB_API_KEY = os.getenv("CPCB_API_KEY")

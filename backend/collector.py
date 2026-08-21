@@ -82,7 +82,7 @@ def collect_city_data(city):
 
 if __name__ == "__main__":
 
-    COLLECTION_INTERVAL = 3600
+    COLLECTION_INTERVAL = 60 * 60  # 1 hour
 
     while True:
 
@@ -92,7 +92,15 @@ if __name__ == "__main__":
 
         for city in CITIES:
 
-            collect_city_data(city)
+            try:
+                collect_city_data(city)
+
+            except Exception as error:
+
+                print(
+                    f"Error collecting {city}:",
+                    error
+                )
 
         print("\nAll cities collected.")
 
