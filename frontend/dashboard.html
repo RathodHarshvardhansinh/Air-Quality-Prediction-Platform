@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AirSense | Dashboard</title>
+
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+
+    <div class="dashboard-layout">
+
+        <!-- =========================================
+             SIDEBAR
+        ========================================== -->
+
+        <aside class="sidebar">
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+                    ◉
+                </div>
+
+                <span>
+                    AirSense
+                </span>
+
+            </div>
+
+
+            <nav class="sidebar-nav">
+
+                <a href="#" class="nav-item active">
+                    <span>⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>◉</span>
+                    Air Quality
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>☁</span>
+                    Weather
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>🚗</span>
+                    Traffic
+                </a>
+
+                <a href="history.html" class="nav-item">
+                    <span>🕒</span>
+                    History
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <a href="#" class="nav-item">
+                    <span>⚙</span>
+                    Settings
+                </a>
+
+                <button
+                    id="logoutButton"
+                    class="logout-button"
+                    type="button"
+                >
+                    <span>↪</span>
+                    Logout
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =========================================
+             MAIN CONTENT
+        ========================================== -->
+
+        <main class="main-content">
+
+
+            <!-- =====================================
+                 TOPBAR
+            ====================================== -->
+
+            <header class="topbar">
+
+                <div class="mobile-brand">
+
+                    <div class="brand-icon">
+                        ◉
+                    </div>
+
+                    <span>
+                        AirSense
+                    </span>
+
+                </div>
+
+
+                <!-- CITY SEARCH -->
+
+                <div class="location-selector">
+
+                    <span class="location-icon">
+                        📍
+                    </span>
+
+                    <input
+                        type="text"
+                        id="citySearch"
+                        placeholder="Enter any city..."
+                        autocomplete="off"
+                    >
+
+                    <button
+                        id="searchCityButton"
+                        type="button"
+                    >
+                        Search
+                    </button>
+
+                </div>
+
+
+                <!-- USER -->
+
+                <div class="user-area">
+
+                    <div class="user-avatar">
+                        A
+                    </div>
+
+                    <div class="user-info">
+
+                        <strong id="userName">
+                            Welcome
+                        </strong>
+
+                        <span id="userEmail">
+                            User
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+
+            <!-- =====================================
+                 DASHBOARD CONTAINER
+            ====================================== -->
+
+            <section class="dashboard-container">
+
+
+                <!-- =================================
+                     WELCOME SECTION
+                ================================== -->
+
+                <div class="welcome-section">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            ENVIRONMENTAL OVERVIEW
+                        </p>
+
+                        <h1>
+
+                            <span id="greetingText">
+                                Good morning
+                            </span>,
+
+                            <span id="welcomeName">
+                                there
+                            </span>.
+
+                        </h1>
+
+                        <p>
+                            Here's what's happening around your environment today.
+                        </p>
+
+                    </div>
+
+
+                    <div class="last-updated">
+
+                        <span class="status-dot"></span>
+
+                        Live data
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================
+                     ROW 1
+                     AQI + PREDICTION
+                ================================== -->
+
+                <div class="main-grid">
+
+
+                    <!-- =================================
+                         LIVE AQI
+                    ================================== -->
+
+                    <div class="live-aqi-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <span class="card-label">
+                                    LIVE AIR QUALITY
+                                </span>
+
+                                <h2 id="aqiCity">
+                                    Ahmedabad
+                                </h2>
+
+                            </div>
+
+
+                            <span class="live-badge">
+                                ● LIVE
+                            </span>
+
+                        </div>
+
+
+                        <div class="aqi-main">
+
+                            <div class="aqi-number">
+
+                                <strong id="liveAqi">
+                                    --
+                                </strong>
+
+                                <span>
+                                    AQI
+                                </span>
+
+                            </div>
+
+
+                            <div class="aqi-status">
+
+                                <span id="aqiStatus">
+                                    Loading...
+                                </span>
+
+                                <p>
+                                    Air quality index
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="aqi-progress">
+
+                            <div
+                                id="aqiProgress"
+                                class="aqi-progress-fill"
+                            ></div>
+
+                        </div>
+
+
+                        <div class="aqi-footer">
+
+                            <span>
+                                Updated just now
+                            </span>
+
+                            <span>
+                                Real-time data
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- PREDICTED AQI -->
+
+<div class="prediction-card">
+
+    <div class="card-header">
+
+        <div>
+            <span class="card-label">
+                AIR QUALITY FORECAST
+            </span>
+
+            <h2>
+                Predicted AQI
+            </h2>
+        </div>
+
+        <span class="prediction-icon">
+            ✦
+        </span>
+
+    </div>
+
+
+    <!-- PREDICTION TABS -->
+
+    <div class="prediction-tabs">
+
+        <button
+            id="prediction1hButton"
+            class="prediction-tab active"
+            type="button"
+        >
+            1 Hour
+        </button>
+
+        <button
+            id="prediction6hButton"
+            class="prediction-tab"
+            type="button"
+        >
+            6 Hours
+        </button>
+
+    </div>
+
+
+    <!-- PREDICTION DISPLAY -->
+
+    <div class="prediction-display">
+
+        <div class="prediction-time-label">
+            PREDICTION
+        </div>
+
+        <div class="prediction-value">
+
+            <span id="predictionValue">
+                --
+            </span>
+
+            <small>
+                AQI
+            </small>
+
+        </div>
+
+        <div
+            id="predictionValueStatus"
+            class="prediction-status"
+        >
+            Loading...
+        </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="prediction-footer">
+
+        <span>
+            ✦ AI Prediction Model
+        </span>
+
+        <span id="predictionCity">
+            --
+        </span>
+
+    </div>
+
+</div>
+
+                <!-- =================================
+                     ROW 2
+                     WEATHER + TRAFFIC
+                ================================== -->
+
+                <div class="secondary-grid">
+
+
+                    <!-- =================================
+                         WEATHER
+                    ================================== -->
+
+                    <div class="info-card weather-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <span class="card-label">
+                                    CURRENT WEATHER
+                                </span>
+
+                                <h2>
+                                    Weather
+                                </h2>
+
+                            </div>
+
+
+                            <span
+                                id="weatherIcon"
+                                class="weather-icon"
+                            >
+                                ☀️
+                            </span>
+
+                        </div>
+
+
+                        <div class="weather-main">
+
+                            <strong id="temperature">
+                                --°C
+                            </strong>
+
+                            <span id="weatherCity">
+                                Ahmedabad
+                            </span>
+
+                            <div
+                                id="weatherDescription"
+                                class="weather-description"
+                            >
+                                Loading...
+                            </div>
+
+                        </div>
+
+
+                        <div class="weather-details">
+
+
+                            <!-- HUMIDITY -->
+
+                            <div>
+
+                                <span>
+                                    💧
+                                </span>
+
+                                <div>
+
+                                    <small>
+                                        Humidity
+                                    </small>
+
+                                    <strong id="humidity">
+                                        --%
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- WIND -->
+
+                            <div>
+
+                                <span>
+                                    💨
+                                </span>
+
+                                <div>
+
+                                    <small>
+                                        Wind Speed
+                                    </small>
+
+                                    <strong id="windSpeed">
+                                        --
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- PRESSURE -->
+
+                            <div>
+
+                                <span>
+                                    ◉
+                                </span>
+
+                                <div>
+
+                                    <small>
+                                        Pressure
+                                    </small>
+
+                                    <strong id="pressure">
+                                        --
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================
+                         TRAFFIC
+                    ================================== -->
+
+                    <div class="info-card traffic-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <span class="card-label">
+                                    SMART TRAFFIC
+                                </span>
+
+                                <h2>
+                                    🚗 Smart Traffic
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="traffic-status-box">
+
+                            <div
+                                class="traffic-circle"
+                                id="trafficCircle"
+                            ></div>
+
+
+                            <div>
+
+                                <h3 id="trafficStatus">
+                                    Loading...
+                                </h3>
+
+                                <small>
+                                    Live Traffic Status
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="traffic-grid">
+
+
+                            <!-- CURRENT SPEED -->
+
+                            <div class="traffic-item">
+
+                                <span>
+                                    Current Speed
+                                </span>
+
+                                <strong id="currentSpeed">
+                                    -- km/h
+                                </strong>
+
+                            </div>
+
+
+                            <!-- ROAD -->
+
+                            <div class="traffic-item">
+
+                                <span>
+                                    Road Condition
+                                </span>
+
+                                <strong id="roadCondition">
+                                    --
+                                </strong>
+
+                            </div>
+
+
+                            <!-- DELAY -->
+
+                            <div class="traffic-item">
+
+                                <span>
+                                    Travel Delay
+                                </span>
+
+                                <strong id="travelDelay">
+                                    -- min
+                                </strong>
+
+                            </div>
+
+
+                            <!-- BEST TIME -->
+
+                            <div class="traffic-item">
+
+                                <span>
+                                    Best Time
+                                </span>
+
+                                <strong id="bestTime">
+                                    --
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================
+                     ROW 3
+                     POLLUTANTS
+                ================================== -->
+
+                <div class="pollutants-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <span class="card-label">
+                                AIR QUALITY
+                            </span>
+
+                            <h2>
+                                Air Quality Breakdown
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="pollutants-grid">
+
+
+                        <!-- PM2.5 -->
+
+                        <div class="pollutant">
+
+                            <span>
+                                PM2.5
+                            </span>
+
+                            <strong id="pm25">
+                                --
+                            </strong>
+
+                            <small>
+                                µg/m³
+                            </small>
+
+                        </div>
+
+
+                        <!-- PM10 -->
+
+                        <div class="pollutant">
+
+                            <span>
+                                PM10
+                            </span>
+
+                            <strong id="pm10">
+                                --
+                            </strong>
+
+                            <small>
+                                µg/m³
+                            </small>
+
+                        </div>
+
+
+                        <!-- NO2 -->
+
+                        <div class="pollutant">
+
+                            <span>
+                                NO₂
+                            </span>
+
+                            <strong id="no2">
+                                --
+                            </strong>
+
+                            <small>
+                                µg/m³
+                            </small>
+
+                        </div>
+
+
+                        <!-- CO -->
+
+                        <div class="pollutant">
+
+                            <span>
+                                CO
+                            </span>
+
+                            <strong id="co">
+                                --
+                            </strong>
+
+                            <small>
+                                mg/m³
+                            </small>
+
+                        </div>
+
+
+                        <!-- O3 -->
+
+                        <div class="pollutant">
+
+                            <span>
+                                O₃
+                            </span>
+
+                            <strong id="o3">
+                                --
+                            </strong>
+
+                            <small>
+                                µg/m³
+                            </small>
+
+                        </div>
+
+
+                        <!-- SO2 -->
+
+                        <div class="pollutant">
+
+                            <span>
+                                SO₂
+                            </span>
+
+                            <strong id="so2">
+                                --
+                            </strong>
+
+                            <small>
+                                µg/m³
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================
+                     ANALYTICS BUTTON
+                ================================== -->
+
+                <button
+                    id="openAnalytics"
+                    class="analytics-fab"
+                    type="button"
+                >
+                    📊 Explore Analytics
+                </button>
+
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+
+    <!-- =========================================
+         ANALYTICS OVERLAY
+    ========================================== -->
+
+    <div
+        id="analyticsOverlay"
+        class="analytics-overlay"
+    >
+
+        <div id="analyticsPanel">
+
+
+            <!-- ANALYTICS HEADER -->
+
+            <div class="analytics-header">
+
+                <h1>
+                    🌍 Environmental Analytics
+                </h1>
+
+                <p>
+                    AI Powered Air Intelligence
+                </p>
+
+            </div>
+
+
+            <!-- CLOSE BUTTON -->
+
+            <button
+                id="closeAnalytics"
+                type="button"
+            >
+                ✕
+            </button>
+
+
+            <!-- ANALYTICS BODY -->
+
+            <div class="analytics-body">
+
+
+                <!-- STAT CARDS -->
+
+                <div class="analytics-grid">
+
+
+                    <div class="stat-card">
+
+                        <h3>
+                            AQI
+                        </h3>
+
+                        <h1 id="analyticsAQI">
+                            --
+                        </h1>
+
+                        <p id="analyticsAQIStatus">
+                            Loading...
+                        </p>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <h3>
+                            Temperature
+                        </h3>
+
+                        <h1 id="analyticsTemp">
+                            --°
+                        </h1>
+
+                        <p>
+                            Current Weather
+                        </p>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <h3>
+                            Traffic
+                        </h3>
+
+                        <h1 id="analyticsTraffic">
+                            --
+                        </h1>
+
+                        <p>
+                            Road Speed
+                        </p>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <h3>
+                            Humidity
+                        </h3>
+
+                        <h1 id="analyticsHumidity">
+                            --%
+                        </h1>
+
+                        <p>
+                            Current
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- GRAPH PLACEHOLDER -->
+
+                <div class="graph-placeholder">
+
+                    📈
+
+                    <h2>
+                        Live Analytics
+                    </h2>
+
+                    <p>
+                        Interactive charts will appear here
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================================
+         JAVASCRIPT
+    ========================================== -->
+
+    <script src="dashboard.js"></script>
+
+</body>
+
+</html>

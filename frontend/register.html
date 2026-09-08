@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AirSense | Create Account</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <section class="visual-panel">
+
+            <div class="brand">
+                <div class="brand-icon">◉</div>
+                <span>AirSense</span>
+            </div>
+
+            <div class="visual-content">
+
+                <p class="eyebrow">
+                    JOIN AIRSENSE
+                </p>
+
+                <h1>
+                    Start your journey<br>
+                    to cleaner air.
+                </h1>
+
+                <p class="visual-description">
+                    Create your account and monitor live air quality,
+                    weather and traffic conditions around you.
+                </p>
+
+                <div class="air-status-card">
+
+                    <div>
+                        <span class="small-label">
+                            YOUR ENVIRONMENT
+                        </span>
+
+                        <h2>Stay Informed</h2>
+
+                        <p>
+                            Real-time environmental intelligence
+                        </p>
+                    </div>
+
+                    <div class="aqi-circle">
+                        <strong>LIVE</strong>
+                        <span>DATA</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="visual-footer">
+                <span>● Real-time environmental intelligence</span>
+                <span>Secure authentication</span>
+            </div>
+
+        </section>
+
+
+        <section class="login-panel">
+
+            <div class="login-card">
+
+                <div class="mobile-brand">
+                    <div class="brand-icon">◉</div>
+                    <span>AirSense</span>
+                </div>
+
+                <div class="login-heading">
+
+                    <p class="eyebrow">
+                        CREATE ACCOUNT
+                    </p>
+
+                    <h2>
+                        Join AirSense
+                    </h2>
+
+                    <p>
+                        Create your account to access your environmental dashboard.
+                    </p>
+
+                </div>
+
+
+                <form id="registerForm">
+
+                    <div class="input-group">
+
+                        <label for="name">
+                            Full name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            placeholder="Enter your full name"
+                            autocomplete="name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label for="email">
+                            Email address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <div class="password-wrapper">
+
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="Create a strong password"
+                                autocomplete="new-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                id="togglePassword"
+                                class="password-toggle"
+                            >
+                                Show
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label for="confirmPassword">
+                            Confirm password
+                        </label>
+
+                        <div class="password-wrapper">
+
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                placeholder="Confirm your password"
+                                autocomplete="new-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                id="toggleConfirmPassword"
+                                class="password-toggle"
+                            >
+                                Show
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="login-button"
+                        id="registerButton"
+                    >
+                        <span id="registerButtonText">
+                            Create Account
+                        </span>
+                    </button>
+
+                </form>
+
+
+                <p
+                    id="registerMessage"
+                    class="message"
+                ></p>
+
+
+                <div class="divider">
+                    <span>Already have an account?</span>
+                </div>
+
+
+                <a
+                    href="index.html"
+                    class="register-button"
+                >
+                    Back to Login
+                </a>
+
+
+                <p class="security-note">
+                    🔒 Your password is securely managed by Firebase Authentication.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="register.js"></script>
+
+</body>
+</html>

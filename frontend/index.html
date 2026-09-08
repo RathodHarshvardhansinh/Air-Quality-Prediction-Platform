@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AirSense | Air Quality Intelligence</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <!-- Left Visual Section -->
+        <section class="visual-panel">
+
+            <div class="brand">
+                <div class="brand-icon">◉</div>
+                <span>AirSense</span>
+            </div>
+
+            <div class="visual-content">
+
+                <p class="eyebrow">
+                    AIR QUALITY INTELLIGENCE
+                </p>
+
+                <h1>
+                    Breathe smarter.<br>
+                    Live healthier.
+                </h1>
+
+                <p class="visual-description">
+                    Monitor real-time air quality, weather and traffic
+                    conditions in one intelligent platform.
+                </p>
+
+                <div class="air-status-card">
+
+                    <div>
+                        <span class="small-label">
+                            LIVE AIR QUALITY
+                        </span>
+
+                        <h2>Good Air</h2>
+
+                        <p>
+                            Ahmedabad, India
+                        </p>
+                    </div>
+
+                    <div class="aqi-circle">
+                        <strong>42</strong>
+                        <span>AQI</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="visual-footer">
+                <span>● Live environmental intelligence</span>
+                <span>Powered by real-time data</span>
+            </div>
+
+        </section>
+
+
+        <!-- Login Section -->
+        <section class="login-panel">
+
+            <div class="login-card">
+
+                <div class="mobile-brand">
+                    <div class="brand-icon">◉</div>
+                    <span>AirSense</span>
+                </div>
+
+                <div class="login-heading">
+
+                    <p class="eyebrow">
+                        WELCOME BACK
+                    </p>
+
+                    <h2>
+                        Sign in to your account
+                    </h2>
+
+                    <p>
+                        Access your personalized environmental dashboard.
+                    </p>
+
+                </div>
+
+
+                <form id="loginForm">
+
+                    <div class="input-group">
+
+                        <label for="email">
+                            Email address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <div class="password-label">
+
+                            <label for="password">
+                                Password
+                            </label>
+
+                            <a href="forgot-password.html">
+                                Forgot password?
+                            </a>
+
+                        </div>
+
+                        <div class="password-wrapper">
+
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                id="togglePassword"
+                                class="password-toggle"
+                            >
+                                Show
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="login-button"
+                        id="loginButton"
+                    >
+                        <span id="loginButtonText">
+                            Sign in
+                        </span>
+                    </button>
+
+                </form>
+
+
+                <p
+                    id="message"
+                    class="message"
+                ></p>
+
+
+                <div class="divider">
+                    <span>New to AirSense?</span>
+                </div>
+
+
+                <a
+                    href="register.html"
+                    class="register-button"
+                >
+                    Create an account
+                </a>
+
+
+                <p class="security-note">
+                    🔒 Your account is protected with secure authentication.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
