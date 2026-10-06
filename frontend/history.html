@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirSense | History</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <style>
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 22px; }
+        .filter-btn { border: 1px solid var(--border); background: #fff; border-radius: 12px; padding: 10px 18px; font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--muted); transition: all .2s; }
+        .filter-btn:hover { border-color: var(--green); color: var(--text); }
+        .filter-btn.active { background: var(--dark-2); color: #fff; border-color: var(--dark-2); }
+        .custom-range { display: none; gap: 8px; align-items: center; animation: viewIn .3s ease both; }
+        .custom-range.show { display: flex; }
+        .custom-range input, .city-select { border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-family: inherit; font-size: 14px; background: #fff; color: var(--text); }
+        .city-select { margin-left: auto; min-width: 190px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 22px; }
+        .summary-value { font-size: 36px; font-weight: 800; letter-spacing: -1px; margin: 8px 0 4px; }
+        .summary-info { font-size: 13px; color: var(--muted); }
+        .chart-wrap { position: relative; height: 320px; }
+        .chart-wrap.short { height: 260px; }
+        .chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; }
+        .chart-head h2 { font-size: 19px; }
+        .chip { background: #eef7f3; color: var(--green-dark); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px; }
+        .empty-state { display: none; text-align: center; padding: 50px 20px; }
+        .empty-state.show { display: block; }
+        .empty-state h3 { font-size: 20px; margin: 10px 0 6px; }
+        .empty-state p { color: var(--muted); max-width: 460px; margin: 0 auto 18px; line-height: 1.55; }
+        .city-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .recent-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 14px; background: #f5f9f7; margin-bottom: 8px; cursor: pointer; transition: background .2s, transform .2s; }
+        .recent-item:hover { background: #e9f5ef; transform: translateX(4px); }
+        .recent-city { font-weight: 700; }
+        .recent-time { font-size: 12px; color: var(--muted); margin-top: 3px; }
+        .insight { display: flex; gap: 16px; align-items: flex-start; }
+        .insight-icon { font-size: 30px; }
+        .insight p { color: var(--muted); line-height: 1.6; margin-top: 6px; }
+        @media (max-width: 850px) { .summary-grid { grid-template-columns: 1fr 1fr; } .city-select { margin-left: 0; width: 100%; } }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-icon">◉</div><span>AirSense</span></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html#dashboard" class="nav-item"><span>⌂</span>Dashboard</a>
+            <a href="dashboard.html#air" class="nav-item"><span>◉</span>Air Quality</a>
+            <a href="dashboard.html#weather" class="nav-item"><span>☁</span>Weather</a>
+            <a href="dashboard.html#traffic" class="nav-item"><span>🚗</span>Traffic</a>
+            <a href="history.html" class="nav-item active"><span>🕒</span>History</a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="dashboard.html#settings" class="nav-item"><span>⚙</span>Settings</a>
+            <button id="logoutButton" class="logout-button" type="button"><span>↪</span>Logout</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="mobile-brand"><div class="brand-icon">◉</div><span>AirSense</span></div>
+            <div><strong style="font-size:17px">Historical Analytics</strong></div>
+            <div class="user-area">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div class="user-info"><strong id="userName">Welcome</strong><span id="userEmail">User</span></div>
+            </div>
+        </header>
+
+        <section class="dashboard-container">
+            <div class="welcome-section">
+                <div>
+                    <p class="eyebrow">HISTORY</p>
+                    <h1>📍 <span id="cityName">--</span></h1>
+                    <p>Explore the air quality, weather and traffic saved for this place.</p>
+                </div>
+                <div class="last-updated" id="latestPill"><span class="status-dot"></span><span id="latestText">Loading...</span></div>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" data-range="24h">24 Hours</button>
+                <button class="filter-btn" data-range="7d">7 Days</button>
+                <button class="filter-btn" data-range="30d">30 Days</button>
+                <button class="filter-btn" data-range="custom">Custom</button>
+                <div class="custom-range" id="customRange">
+                    <input type="date" id="startDate"> <span>to</span> <input type="date" id="endDate">
+                    <button class="btn" id="applyCustom" type="button">Apply</button>
+                </div>
+                <select class="city-select" id="citySelect" title="Switch city"></select>
+            </div>
+
+            <div class="summary-grid">
+                <div class="card"><span class="card-label">AVERAGE AQI</span><div class="summary-value" id="avgAQI">--</div><div class="summary-info" id="avgLabel">Historical average</div></div>
+                <div class="card"><span class="card-label">HIGHEST AQI</span><div class="summary-value" id="maxAQI">--</div><div class="summary-info">Peak pollution level</div></div>
+                <div class="card"><span class="card-label">LOWEST AQI</span><div class="summary-value" id="minAQI">--</div><div class="summary-info">Cleanest reading</div></div>
+                <div class="card"><span class="card-label">RECORDS</span><div class="summary-value" id="recordCount">--</div><div class="summary-info">Saved readings</div></div>
+            </div>
+
+            <div class="card empty-state" id="emptyState">
+                <div style="font-size:42px">📭</div>
+                <h3 id="emptyTitle">No history saved yet</h3>
+                <p id="emptyText">Every time you open the dashboard for a place, AirSense saves a reading. Come back after a few visits, or look at a city that already has data:</p>
+                <div class="city-chips" id="cityChips"></div>
+            </div>
+
+            <div id="chartsArea">
+                <div class="card" style="margin-bottom:22px">
+                    <div class="chart-head"><h2>📈 AQI Trend</h2><span class="chip" id="chartStatus">Last 24 hours</span></div>
+                    <div class="chart-wrap"><canvas id="aqiChart"></canvas></div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="chart-head"><h2>🌡 Temperature</h2></div>
+                        <div class="chart-wrap short"><canvas id="temperatureChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="chart-head"><h2>🌫 PM2.5 &amp; PM10</h2></div>
+                        <div class="chart-wrap short"><canvas id="pmChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:22px">
+                    <div class="insight">
+                        <div class="insight-icon">🤖</div>
+                        <div><h2>Historical Insight</h2><p id="insightText">Your insights will appear here.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="chart-head"><h2>🕒 Recently Viewed</h2><span class="chip">Your activity</span></div>
+                <div id="recentList"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="config.js"></script>
+<script>
+// ---------- auth + user ----------
+if (!localStorage.getItem("idToken")) window.location.href = "index.html";
+const $ = (id) => document.getElementById(id);
+
+const email = localStorage.getItem("userEmail");
+if (email) {
+    const name = localStorage.getItem("userName") || email.split("@")[0];
+    $("userName").textContent = name;
+    $("userEmail").textContent = email;
+    $("userAvatar").textContent = name[0].toUpperCase();
+}
+$("logoutButton").addEventListener("click", () => {
+    ["idToken", "userEmail", "userName", "airsense_place", "lastCity"].forEach((k) => localStorage.removeItem(k));
+    window.location.href = "index.html";
+});
+
+function toast(msg) {
+    const el = $("toast"); el.textContent = msg; el.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("show"), 3500);
+}
+
+// ---------- which city? ----------
+function savedPlaceName() {
+    try { const p = JSON.parse(localStorage.getItem("airsense_place")); return p && p.name; } catch (e) { return null; }
+}
+let city = new URLSearchParams(location.search).get("city") || savedPlaceName() || "";
+let range = "24h";
+let charts = {};
+
+const RANGE_TEXT = { "24h": "Last 24 hours", "7d": "Last 7 days", "30d": "Last 30 days", custom: "Custom range" };
+
+// ---------- helpers ----------
+const num = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+const avg = (a) => a.reduce((s, v) => s + v, 0) / a.length;
+
+function parseTs(ts) { return new Date(String(ts).replace(" ", "T")); }
+
+// Reduce many points to <= max by averaging buckets (keeps charts fast & readable)
+function downsample(rows, max = 300) {
+    if (rows.length <= max) return rows;
+    const size = Math.ceil(rows.length / max);
+    const out = [];
+    for (let i = 0; i < rows.length; i += size) {
+        const chunk = rows.slice(i, i + size);
+        const pick = (k) => { const v = chunk.map((r) => num(r[k])).filter((x) => x !== null); return v.length ? +avg(v).toFixed(1) : null; };
+        out.push({ timestamp: chunk[Math.floor(chunk.length / 2)].timestamp, aqi: pick("aqi"), temperature: pick("temperature"), humidity: pick("humidity"), pm25: pick("pm25"), pm10: pick("pm10"), traffic_speed: pick("traffic_speed") });
+    }
+    return out;
+}
+
+function labelFor(ts, spanHours) {
+    const d = parseTs(ts);
+    if (spanHours <= 30) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (spanHours <= 24 * 8) return d.toLocaleDateString([], { weekday: "short" }) + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function aqiColor(v) {
+    if (v <= 50) return "#2ecf8f"; if (v <= 100) return "#8fd14f"; if (v <= 200) return "#f2c230";
+    if (v <= 300) return "#f28a30"; if (v <= 400) return "#e5484d"; return "#9b2c4a";
+}
+
+function makeChart(id, labels, datasets, yTitle, extra = {}) {
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart($(id), {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 900, easing: "easeOutQuart" },
+            interaction: { intersect: false, mode: "index" },
+            plugins: { legend: { display: datasets.length > 1, position: "bottom" } },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 9, color: "#71827c" } },
+                y: { beginAtZero: !!extra.zero, title: { display: true, text: yTitle, color: "#71827c" }, grid: { color: "rgba(0,0,0,.05)" }, ticks: { color: "#71827c" } },
+            },
+        },
+    });
+}
+
+function destroyCharts() { Object.values(charts).forEach((c) => c.destroy()); charts = {}; }
+
+// ---------- load ----------
+async function loadHistory() {
+    if (!city) { showEmpty("Pick a city", "Open the dashboard first, or choose a city from the list above."); return; }
+    $("cityName").textContent = city;
+    $("chartStatus").textContent = RANGE_TEXT[range];
+
+    let url = `${API_BASE}/history/${range}?city=${encodeURIComponent(city)}`;
+    if (range === "custom") {
+        const s = $("startDate").value, e = $("endDate").value;
+        if (!s || !e) { toast("Choose a start and an end date."); return; }
+        url += `&start=${s}&end=${e}`;
+    }
+
+    let data;
+    try {
+        const r = await fetch(url);
+        data = await r.json();
+        if (!r.ok) throw new Error(data.error || "Could not load history");
+    } catch (err) {
+        console.error(err);
+        showEmpty("Can't reach the server", "Start the backend with  python backend/app.py  and refresh this page.");
+        return;
+    }
+
+    const rows = data.records || [];
+    if (!rows.length) {
+        showEmpty(`No data for ${city} in this period`,
+            "Try a longer range, or pick a city that already has saved history. Every visit to the dashboard also saves a new reading for the place:");
+        return;
+    }
+
+    hideEmpty();
+    setCustomDefaults(data.latest);
+    $("latestText").textContent = `Latest reading: ${parseTs(data.latest).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`;
+
+    // old data? tell the user honestly
+    const ageDays = (Date.now() - parseTs(data.latest)) / 86400000;
+    $("latestPill").className = "last-updated" + (ageDays > 2 ? " stale" : "");
+    if (ageDays > 2) toast(`Showing the most recent saved data (${Math.floor(ageDays)} days old).`);
+
+    // summary
+    const aqiVals = rows.map((r) => num(r.aqi)).filter((v) => v !== null);
+    $("avgAQI").textContent = aqiVals.length ? Math.round(avg(aqiVals)) : "--";
+    $("maxAQI").textContent = aqiVals.length ? Math.max(...aqiVals) : "--";
+    $("minAQI").textContent = aqiVals.length ? Math.min(...aqiVals) : "--";
+    $("recordCount").textContent = rows.length.toLocaleString();
+    $("avgAQI").style.color = aqiVals.length ? aqiColor(avg(aqiVals)) : "";
+    $("maxAQI").style.color = aqiVals.length ? aqiColor(Math.max(...aqiVals)) : "";
+    $("minAQI").style.color = aqiVals.length ? aqiColor(Math.min(...aqiVals)) : "";
+
+    // charts
+    const pts = downsample(rows);
+    const span = (parseTs(rows[rows.length - 1].timestamp) - parseTs(rows[0].timestamp)) / 3600000;
+    const labels = pts.map((r) => labelFor(r.timestamp, span));
+    const aqiData = pts.map((r) => num(r.aqi));
+    const tip = (r) => [`AQI: ${r.aqi ?? "--"}`, `Temp: ${r.temperature ?? "--"}°C`, `Humidity: ${r.humidity ?? "--"}%`];
+
+    if (typeof Chart === "undefined") { toast("Chart library could not load — check your internet connection."); return; }
+
+    makeChart("aqiChart", labels, [{
+        label: "AQI", data: aqiData, borderWidth: 3, tension: 0.35, fill: true, pointRadius: pts.length > 80 ? 0 : 3, pointHoverRadius: 6,
+        borderColor: "#35d39a", backgroundColor: "rgba(53,211,154,.14)",
+        segment: { borderColor: (c) => aqiColor(Math.max(c.p0.parsed.y || 0, c.p1.parsed.y || 0)) },
+    }], "AQI", { zero: true });
+    charts.aqiChart.options.plugins.tooltip = { callbacks: { afterBody: (items) => tip(pts[items[0].dataIndex]).slice(1) } };
+    charts.aqiChart.update();
+
+    makeChart("temperatureChart", labels, [{
+        label: "Temperature", data: pts.map((r) => num(r.temperature)), borderWidth: 3, tension: 0.35, fill: true,
+        pointRadius: pts.length > 80 ? 0 : 3, borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,.12)",
+    }], "°C");
+
+    makeChart("pmChart", labels, [
+        { label: "PM2.5", data: pts.map((r) => num(r.pm25)), borderWidth: 2.5, tension: 0.35, pointRadius: 0, borderColor: "#6366f1" },
+        { label: "PM10", data: pts.map((r) => num(r.pm10)), borderWidth: 2.5, tension: 0.35, pointRadius: 0, borderColor: "#ec4899" },
+    ], "µg/m³", { zero: true });
+
+    insight(rows, aqiVals);
+}
+
+function insight(rows, aqi) {
+    if (aqi.length < 4) { $("insightText").textContent = "Not enough readings yet to describe a trend."; return; }
+    const half = Math.floor(aqi.length / 2);
+    const a = avg(aqi.slice(0, half)), b = avg(aqi.slice(half));
+    const diff = Math.round(b - a);
+    const trend = Math.abs(diff) < 5 ? "stayed about the same" : diff > 0 ? `got worse (up ~${diff} AQI)` : `improved (down ~${Math.abs(diff)} AQI)`;
+
+    // worst & best hour of day
+    const byHour = {};
+    rows.forEach((r) => { const v = num(r.aqi); if (v === null) return; const h = parseTs(r.timestamp).getHours(); (byHour[h] = byHour[h] || []).push(v); });
+    const hours = Object.entries(byHour).map(([h, v]) => [Number(h), avg(v)]);
+    let extra = "";
+    if (hours.length >= 6) {
+        hours.sort((x, y) => x[1] - y[1]);
+        const fmt = (h) => new Date(2000, 0, 1, h).toLocaleTimeString([], { hour: "numeric" });
+        extra = ` Air is usually cleanest around ${fmt(hours[0][0])} and most polluted around ${fmt(hours[hours.length - 1][0])}.`;
+    }
+    $("insightText").textContent = `Over this period the air in ${city} ${trend}. The average AQI was ${Math.round(avg(aqi))}, ranging from ${Math.min(...aqi)} to ${Math.max(...aqi)}.${extra}`;
+}
+
+// ---------- empty state ----------
+let knownCities = [];
+function showEmpty(title, text) {
+    destroyCharts();
+    $("chartsArea").style.display = "none";
+    $("emptyState").classList.add("show");
+    $("emptyTitle").textContent = title;
+    $("emptyText").textContent = text;
+    ["avgAQI", "maxAQI", "minAQI"].forEach((id) => { $(id).textContent = "--"; $(id).style.color = ""; });
+    $("recordCount").textContent = "0";
+    $("latestText").textContent = "No data";
+    $("latestPill").className = "last-updated stale";
+    $("cityChips").innerHTML = knownCities.slice(0, 6).map((c) => `<button class="filter-btn" data-city="${c.city}">${c.city} (${c.n.toLocaleString()})</button>`).join("");
+}
+function hideEmpty() {
+    $("chartsArea").style.display = "";
+    $("emptyState").classList.remove("show");
+}
+
+// ---------- recently viewed ----------
+function loadRecent() {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem("airSenseRecentlyViewed")) || []; } catch (e) { /* ignore */ }
+    const box = $("recentList");
+    if (!list.length) { box.innerHTML = `<p class="empty-note">No recently viewed places yet. Search a city on the dashboard.</p>`; return; }
+    box.innerHTML = list.slice(0, 6).map((x) => `
+        <div class="recent-item" data-city="${x.city}">
+            <div><div class="recent-city">📍 ${x.city}</div><div class="recent-time">${x.time}</div></div><div>→</div>
+        </div>`).join("");
+}
+
+function switchCity(name) {
+    city = name;
+    history.replaceState(null, "", `history.html?city=${encodeURIComponent(name)}`);
+    $("citySelect").value = name;
+    loadHistory();
+}
+
+// ---------- events ----------
+document.querySelectorAll(".filter-btn[data-range]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn[data-range]").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        range = btn.dataset.range;
+        $("customRange").classList.toggle("show", range === "custom");
+        if (range !== "custom") loadHistory();
+    })
+);
+$("applyCustom").addEventListener("click", loadHistory);
+$("citySelect").addEventListener("change", (e) => switchCity(e.target.value));
+document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-city]");
+    if (t) switchCity(t.dataset.city);
+});
+
+// custom range defaults: the 30 days ending at the newest saved reading
+let customSet = false;
+function setCustomDefaults(latest) {
+    if (customSet || !latest) return;
+    customSet = true;
+    const end = parseTs(latest), start = new Date(end.getTime() - 30 * 86400000);
+    const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    $("endDate").value = iso(end);
+    $("startDate").value = iso(start);
+}
+
+// ---------- start ----------
+(async function start() {
+    loadRecent();
+    try {
+        const r = await fetch(`${API_BASE}/cities`);
+        knownCities = await r.json();
+    } catch (e) { /* offline - handled when loading history */ }
+
+    // city dropdown: current city first, then the ones with most data
+    const names = [...new Set([city, ...knownCities.map((c) => c.city)].filter(Boolean))];
+    $("citySelect").innerHTML = names.map((n) => `<option value="${n}">${n}</option>`).join("");
+    if (city) $("citySelect").value = city;
+
+    loadHistory();
+})();
+</script>
+</body>
+</html>

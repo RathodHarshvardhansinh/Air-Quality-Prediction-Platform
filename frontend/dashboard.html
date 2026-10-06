@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirSense | Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">◉</div>
+            <span>AirSense</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#dashboard" class="nav-item active" data-view="dashboard"><span>⌂</span>Dashboard</a>
+            <a href="#air" class="nav-item" data-view="air"><span>◉</span>Air Quality</a>
+            <a href="#weather" class="nav-item" data-view="weather"><span>☁</span>Weather</a>
+            <a href="#traffic" class="nav-item" data-view="traffic"><span>🚗</span>Traffic</a>
+            <a href="history.html" class="nav-item" id="historyLink"><span>🕒</span>History</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="#settings" class="nav-item" data-view="settings"><span>⚙</span>Settings</a>
+            <button id="logoutButton" class="logout-button" type="button"><span>↪</span>Logout</button>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="mobile-brand"><div class="brand-icon">◉</div><span>AirSense</span></div>
+
+            <div class="location-selector">
+                <span>📍</span>
+                <input type="text" id="citySearch" placeholder="Search any city or village..." autocomplete="off">
+                <button id="useLocationButton" type="button" title="Use my current location">⌖</button>
+                <button id="searchCityButton" type="button">Search</button>
+            </div>
+
+            <div class="user-area">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div class="user-info">
+                    <strong id="userName">Welcome</strong>
+                    <span id="userEmail">User</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="dashboard-container">
+
+            <div class="welcome-section">
+                <div>
+                    <p class="eyebrow">ENVIRONMENTAL OVERVIEW</p>
+                    <h1><span id="greetingText">Hello</span>, <span id="welcomeName">there</span>.</h1>
+                    <p class="place-line">📍 <b id="placeLabel">Finding your location...</b>
+                        <span id="clockText"></span></p>
+                </div>
+                <div class="last-updated" id="statusPill">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+            </div>
+
+            <!-- ============ VIEW: DASHBOARD ============ -->
+            <div class="view active" id="view-dashboard">
+
+                <div class="grid grid-hero">
+                    <div class="card hero-card" id="heroCard" data-level="none">
+                        <div class="card-header">
+                            <div>
+                                <span class="card-label">LIVE AIR QUALITY</span>
+                                <h2 id="aqiCity">--</h2>
+                            </div>
+                            <span class="live-badge">● LIVE</span>
+                        </div>
+
+                        <div class="aqi-main">
+                            <div class="ring">
+                                <svg viewBox="0 0 160 160">
+                                    <circle class="track" cx="80" cy="80" r="70"></circle>
+                                    <circle class="fill" id="ringFill" cx="80" cy="80" r="70"></circle>
+                                </svg>
+                                <div class="ring-center">
+                                    <strong id="liveAqi" class="skeleton">000</strong>
+                                    <small>AQI</small>
+                                </div>
+                            </div>
+                            <div class="aqi-text">
+                                <div class="level-chip" id="aqiStatus">Loading...</div>
+                                <p id="aqiHint">Fetching the latest readings for your location.</p>
+                                <p class="meta" id="aqiSource"></p>
+                            </div>
+                        </div>
+
+                        <div class="aqi-scale"><div class="marker" id="aqiMarker"></div></div>
+                        <div class="aqi-footer">
+                            <span id="aqiUpdated">Updating...</span>
+                            <span>Real-time data</span>
+                        </div>
+                    </div>
+
+                    <div class="card" id="forecastCard" data-level="none">
+                        <div class="card-header">
+                            <div>
+                                <span class="card-label">AIR QUALITY FORECAST</span>
+                                <h2>Predicted AQI</h2>
+                            </div>
+                            <span class="card-icon">✦</span>
+                        </div>
+                        <div class="tabs">
+                            <button class="tab active" id="prediction1hButton" type="button">1 Hour</button>
+                            <button class="tab" id="prediction6hButton" type="button">6 Hours</button>
+                        </div>
+                        <div class="forecast-display">
+                            <div class="small-label">PREDICTION</div>
+                            <div class="forecast-value"><span id="predictionValue">--</span><small>AQI</small></div>
+                            <div class="forecast-status" id="predictionValueStatus">Loading...</div>
+                            <div class="forecast-delta" id="predictionDelta"></div>
+                        </div>
+                        <div class="card-footer">
+                            <span>✦ AI Prediction Model</span>
+                            <span id="predictionCity">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <div><span class="card-label">CURRENT WEATHER</span><h2>Weather</h2></div>
+                            <span class="card-icon" id="weatherIcon">🌤️</span>
+                        </div>
+                        <div class="big-temp" id="temperature">--°C</div>
+                        <div class="sub" id="weatherDescription">Loading...</div>
+                        <div class="mini-stats">
+                            <div class="mini-stat"><small>💧 Humidity</small><strong id="humidity">--%</strong></div>
+                            <div class="mini-stat"><small>💨 Wind</small><strong id="windSpeed">--</strong></div>
+                            <div class="mini-stat"><small>◉ Pressure</small><strong id="pressure">--</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div><span class="card-label">SMART TRAFFIC</span><h2>Traffic</h2></div>
+                            <span class="card-icon">🚗</span>
+                        </div>
+                        <div class="traffic-head">
+                            <div class="traffic-circle" id="trafficCircle"></div>
+                            <div><h3 id="trafficStatus">Loading...</h3><small>Live traffic status</small></div>
+                        </div>
+                        <div class="stat-tiles">
+                            <div class="tile"><span>Current speed</span><strong id="currentSpeed">-- km/h</strong></div>
+                            <div class="tile"><span>Road condition</span><strong id="roadCondition">--</strong></div>
+                            <div class="tile"><span>Travel delay</span><strong id="travelDelay">--</strong></div>
+                            <div class="tile"><span>Best time</span><strong id="bestTime">--</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="card advisory-card" id="advisoryCard" data-level="none">
+                        <div class="card-header">
+                            <div><span class="card-label">HEALTH ADVISORY</span><h2>Stay safe</h2></div>
+                            <span class="card-icon" id="advisoryIcon">⚪</span>
+                        </div>
+                        <div class="advisory-title" id="advisoryTitle">Checking air quality...</div>
+                        <p class="advisory-text" id="advisoryText">Fetching the latest advice for this location.</p>
+                        <ul class="advisory-tips" id="advisoryTips"></ul>
+                        <div class="pollution-alert-banner" id="pollutionAlertBanner">
+                            <span id="pollutionAlertIcon">⚠️</span><span id="pollutionAlertText"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="pollutantsCard">
+                    <div class="card-header">
+                        <div><span class="card-label">AIR QUALITY</span><h2>Air Quality Breakdown</h2></div>
+                    </div>
+                    <div class="pollutants-grid" id="pollutantsGrid"></div>
+                </div>
+            </div>
+
+            <!-- ============ VIEW: AIR QUALITY ============ -->
+            <div class="view" id="view-air">
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header"><div><span class="card-label">DETAILS</span><h2>Pollutant levels</h2></div></div>
+                        <div class="pollutants-grid" id="pollutantsGridAir" style="grid-template-columns:repeat(3,1fr)"></div>
+                        <p class="empty-note" id="airSourceNote" style="margin-top:18px"></p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div><span class="card-label">INDIAN NAQI SCALE</span><h2>What the numbers mean</h2></div></div>
+                        <div class="legend" id="aqiLegend"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ VIEW: WEATHER ============ -->
+            <div class="view" id="view-weather">
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header"><div><span class="card-label">RIGHT NOW</span><h2 id="wxCity">Weather</h2></div><span class="card-icon" id="wxIcon">🌤️</span></div>
+                        <div class="big-temp" id="wxTemp">--°C</div>
+                        <div class="sub" id="wxDesc">--</div>
+                        <p class="empty-note" id="wxSource" style="margin-top:18px"></p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div><span class="card-label">CONDITIONS</span><h2>Details</h2></div></div>
+                        <div class="stat-tiles" id="wxTiles"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ VIEW: TRAFFIC ============ -->
+            <div class="view" id="view-traffic">
+                <div class="grid grid-2">
+                    <div class="card" id="trafficBigCard" data-level="none">
+                        <div class="card-header"><div><span class="card-label">LIVE ROAD FLOW</span><h2 id="tfStatus">Traffic</h2></div><span class="card-icon">🚗</span></div>
+                        <div class="big-temp" id="tfSpeed">-- km/h</div>
+                        <div class="sub">Current average speed near this location</div>
+                        <div class="speed-gauge" style="margin-top:26px">
+                            <div class="speed-track"><i id="tfBar"></i></div>
+                            <div class="speed-labels"><span>Standstill</span><span id="tfFree">Free flow --</span></div>
+                        </div>
+                        <p class="empty-note" id="tfNote" style="margin-top:16px"></p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div><span class="card-label">TRAVEL INFO</span><h2>Details</h2></div></div>
+                        <div class="stat-tiles" id="tfTiles"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ VIEW: SETTINGS ============ -->
+            <div class="view" id="view-settings">
+                <div class="card" style="max-width:720px">
+                    <div class="card-header"><div><span class="card-label">PREFERENCES</span><h2>Settings</h2></div></div>
+                    <div class="settings-row">
+                        <div><strong>Auto-detect my location</strong><p>Use GPS every time the dashboard opens.</p></div>
+                        <label class="switch"><input type="checkbox" id="setAutoLocate" checked><span></span></label>
+                    </div>
+                    <div class="settings-row">
+                        <div><strong>Auto refresh</strong><p>Reload live data every 5 minutes.</p></div>
+                        <label class="switch"><input type="checkbox" id="setAutoRefresh" checked><span></span></label>
+                    </div>
+                    <div class="settings-row">
+                        <div><strong>Pollution alert notifications</strong><p>Browser notification when air turns Poor or worse.</p></div>
+                        <label class="switch"><input type="checkbox" id="setNotify"><span></span></label>
+                    </div>
+                    <div class="settings-row">
+                        <div><strong>Saved location</strong><p id="savedPlaceText">None</p></div>
+                        <button class="btn ghost" id="clearPlaceButton" type="button">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+</div>
+
+<button id="openAnalytics" class="analytics-fab" type="button">📊 Explore Analytics</button>
+
+<!-- ================= ANALYTICS OVERLAY ================= -->
+<div id="analyticsOverlay" class="analytics-overlay">
+    <div id="analyticsPanel">
+        <button id="closeAnalytics" type="button">✕</button>
+        <div class="analytics-header">
+            <h1>🌍 Environmental Analytics</h1>
+            <p id="analyticsSub">AI powered air intelligence</p>
+        </div>
+        <div class="analytics-grid">
+            <div class="stat-card"><h3>AQI</h3><h1 id="analyticsAQI">--</h1><p id="analyticsAQIStatus">--</p></div>
+            <div class="stat-card"><h3>Temperature</h3><h1 id="analyticsTemp">--</h1><p>Current weather</p></div>
+            <div class="stat-card"><h3>Traffic</h3><h1 id="analyticsTraffic">--</h1><p>Road speed</p></div>
+            <div class="stat-card"><h3>Humidity</h3><h1 id="analyticsHumidity">--</h1><p>Current</p></div>
+        </div>
+        <div class="chart-box"><canvas id="analyticsChart"></canvas></div>
+        <p class="empty-note" id="analyticsChartNote"></p>
+        <a class="analytics-link" id="analyticsHistoryLink" href="history.html">Open full history →</a>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+{
+  "1h": {
+    "results": [
+      {
+        "model": "HistGradientBoosting (LightGBM-equivalent)",
+        "MAE": 1.01,
+        "RMSE": 2.03,
+        "R2": 0.9662
+      },
+      {
+        "model": "GradientBoosting (sklearn)",
+        "MAE": 1.1,
+        "RMSE": 2.13,
+        "R2": 0.9628
+      },
+      {
+        "model": "ExtraTrees",
+        "MAE": 1.19,
+        "RMSE": 2.34,
+        "R2": 0.955
+      },
+      {
+        "model": "RandomForest (current)",
+        "MAE": 1.25,
+        "RMSE": 2.59,
+        "R2": 0.9449
+      }
+    ],
+    "best": "HistGradientBoosting (LightGBM-equivalent)"
+  },
+  "6h": {
+    "results": [
+      {
+        "model": "HistGradientBoosting (LightGBM-equivalent)",
+        "MAE": 2.06,
+        "RMSE": 3.15,
+        "R2": 0.9187
+      },
+      {
+        "model": "ExtraTrees",
+        "MAE": 2.1,
+        "RMSE": 3.25,
+        "R2": 0.9133
+      },
+      {
+        "model": "GradientBoosting (sklearn)",
+        "MAE": 2.14,
+        "RMSE": 3.25,
+        "R2": 0.9133
+      },
+      {
+        "model": "RandomForest (current)",
+        "MAE": 2.19,
+        "RMSE": 3.52,
+        "R2": 0.8984
+      }
+    ],
+    "best": "HistGradientBoosting (LightGBM-equivalent)"
+  }
+}

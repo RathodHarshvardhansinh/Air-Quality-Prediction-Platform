@@ -1,0 +1,31 @@
+.env
+firebase-service-account.json
+venv/
+__pycache__/
+*.pyc
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+.venv/
+
+# SQLite databases
+*.db
+*.db.db
+
+# Environment / API keys
+.env
+.env.*
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+# ML model files
+ml/*.pkl
+ml/model_backup/
