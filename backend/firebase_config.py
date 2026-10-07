@@ -8,19 +8,17 @@ firebase_credentials_path = os.path.join(
     "firebase-service-account.json"
 )
 
-database_url = os.getenv("FIREBASE_DATABASE_URL")
-
 cred = credentials.Certificate(firebase_credentials_path)
 
 firebase_admin.initialize_app(
     cred,
     {
-        "databaseURL": database_url
+        "databaseURL": "https://airqualitypredictionplatform-default-rtdb.firebaseio.com"
     }
 )
 
-# Existing Firestore database - keep this for users/auth/profile
+# Existing Firestore connection
 db = firestore.client()
 
-# New Realtime Database - used for ESP32 sensor data
+# Firebase Realtime Database
 rtdb = realtime_db

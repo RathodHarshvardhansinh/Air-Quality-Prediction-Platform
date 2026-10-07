@@ -48,17 +48,32 @@ def _parse_timestamp(value):
         return None
 
 
+
 def get_current_sensor_data():
     try:
         data = rtdb.reference("sensor_data/current").get()
 
-        if not isinstance(data, dict) or not data:
-            return None
+        print("========== FIREBASE SENSOR TEST ==========")
+        print("Raw Firebase data:", data)
 
-        return data
+        # Handle an extra "current" wrapper if it exists
+        if (
+            isinstance(data, dict)
+            and "current" in data
+            and isinstance(data["current"], dict)
+            and "aqi" not in data
+        ):
+            data = data["current"]
+
+        print("Processed sensor data:", data)
+        print("==========================================")
+
+        return data if isinstance(data, dict) else None
 
     except Exception as error:
-        print("Realtime Database sensor read failed:", error)
+        print("========== FIREBASE SENSOR ERROR ==========")
+        print(error)
+        print("==========================================")
         return None
 
 
@@ -102,6 +117,9 @@ def sensor_is_available_for_place(sensor, place):
     # Otherwise compare city names.
     sensor_city = str(sensor.get("city", "")).strip().lower()
     place_city = str(place.get("name", "")).strip().lower()
+    
+    print("Sensor record:", sensor)
+    print("Selected place:", place)
 
     return bool(sensor_city and place_city and sensor_city == place_city)
 
