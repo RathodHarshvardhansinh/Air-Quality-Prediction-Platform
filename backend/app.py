@@ -6,8 +6,14 @@ import requests
 from flask import Flask, jsonify, redirect, request
 from flask_cors import CORS
 
-from aqi import get_aqi_data
+from aqi import (
+    get_aqi_data,
+    calculate_aqi_details,
+    get_aqi_category,
+)
+
 from config import FIREBASE_WEB_API_KEY
+
 from database import (
     create_database,
     get_city_range_history,
@@ -16,10 +22,17 @@ from database import (
     get_latest_record,
     minutes_since_last_save,
 )
+
 from location import get_city_coordinates, reverse_geocode
 from save_data import save_environment_data
 from traffic import get_traffic_data
 from weather import get_weather_data
+
+from sensor_data import (
+    get_current_sensor_data,
+    get_sensor_aqi,
+    sensor_is_available_for_place,
+)
 
 # Firebase is only needed for register / login / profile.  If the key file
 # is missing the dashboard itself still works.
@@ -244,29 +257,104 @@ def environment():
         aqi_data = safe(f_aqi, "aqi")
         traffic_data = safe(f_traffic, "traffic")
 
+    # -------------------------------------------------
+    # SENSOR + API AQI LOGIC
+    # -------------------------------------------------
+    sensor_data = get_current_sensor_data()
+    sensor_aqi_data = None
+
+    if sensor_data:
+        try:
+            if sensor_is_available_for_place(sensor_data, place):
+                sensor_aqi_data = get_sensor_aqi(
+                    sensor_data,
+                    calculate_aqi_details
+                )
+                print("Valid sensor data found:", sensor_aqi_data)
+            else:
+                print("Sensor exists, but not for this location or is stale.")
+        except Exception as error:
+            print("Sensor processing failed:", error)
+
+    # Case 1: Sensor + API available
+    if sensor_aqi_data and aqi_data:
+        sensor_value = sensor_aqi_data.get("aqi")
+        api_value = aqi_data.get("aqi")
+
+        if sensor_value is not None and api_value is not None:
+            combined_aqi = round((sensor_value + api_value) / 2)
+            combined_aqi = max(0, min(combined_aqi, 500))
+
+            original_api_aqi = api_value
+
+            aqi_data = {
+                **aqi_data,
+                "aqi": combined_aqi,
+                "category": get_aqi_category(combined_aqi),
+                "source": "ESP32 Sensor + API (Combined)",
+                "sensor_aqi": sensor_value,
+                "api_aqi": original_api_aqi,
+            }
+
+    # Case 2: API unavailable, but sensor available
+    elif sensor_aqi_data:
+        aqi_data = {
+            **sensor_aqi_data,
+            "source": "ESP32 Sensor (API unavailable)",
+            "sensor_aqi": sensor_aqi_data.get("aqi"),
+            "api_aqi": None,
+        }
+
+    # Case 3: Sensor unavailable, but API available
+    elif aqi_data:
+        api_value = aqi_data.get("aqi")
+
+        aqi_data = {
+            **aqi_data,
+            "source": "API (Sensor unavailable)",
+            "sensor_aqi": None,
+            "api_aqi": api_value,
+        }
+
+    # -------------------------------------------------
+    # TRAFFIC FALLBACK
+    # -------------------------------------------------
     if traffic_data is None:
         traffic_data = _traffic_from_history(name)
 
+    # -------------------------------------------------
+    # ERRORS
+    # -------------------------------------------------
     errors = {}
+
     if weather_data is None:
         errors["weather"] = "Weather service unavailable"
+
     if aqi_data is None:
-        errors["air_quality"] = "Air quality service unavailable"
+        errors["air_quality"] = "No sensor or API air-quality data available"
+
     if traffic_data is None:
         errors["traffic"] = "No live traffic data for this location"
 
-    # Save a history row (throttled) so new places build up history + predictions
+    # -------------------------------------------------
+    # SAVE HISTORY
+    # -------------------------------------------------
     saved = False
+
     if aqi_data and aqi_data.get("aqi") is not None and weather_data:
         minutes = minutes_since_last_save(name)
+
         if minutes is None or minutes >= SAVE_EVERY_MINUTES:
             try:
                 save_environment_data(
                     city=name,
                     aqi=aqi_data["aqi"],
-                    pm25=aqi_data.get("pm25"), pm10=aqi_data.get("pm10"),
-                    no2=aqi_data.get("no2"), co=aqi_data.get("co"),
-                    o3=aqi_data.get("o3"), so2=aqi_data.get("so2"),
+                    pm25=aqi_data.get("pm25"),
+                    pm10=aqi_data.get("pm10"),
+                    no2=aqi_data.get("no2"),
+                    co=aqi_data.get("co"),
+                    o3=aqi_data.get("o3"),
+                    so2=aqi_data.get("so2"),
                     temperature=weather_data.get("temperature"),
                     humidity=weather_data.get("humidity"),
                     pressure=weather_data.get("pressure"),
@@ -274,7 +362,9 @@ def environment():
                     traffic_speed=(traffic_data or {}).get("current_speed"),
                     free_flow_speed=(traffic_data or {}).get("free_flow_speed"),
                 )
+
                 saved = True
+
             except Exception as error:
                 print("Could not save history row:", error)
 
@@ -287,7 +377,6 @@ def environment():
         "saved_to_history": saved,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     })
-
 
 # =====================================
 # PREDICTIONS
