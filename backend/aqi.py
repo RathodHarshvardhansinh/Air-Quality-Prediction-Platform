@@ -353,61 +353,111 @@ def find_nearest_station(records, latitude, longitude):
 
 def get_open_meteo_raw_pollutants(latitude, longitude):
     """
-    Fetches raw pollutant measurements from Open-Meteo Air Quality.
+    Fetch hourly pollutant data from Open-Meteo.
+
+    Uses recent hourly values instead of the instantaneous
+    'current' values so that the AQI calculation is more stable.
     """
+
     url = "https://air-quality-api.open-meteo.com/v1/air-quality"
+
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "current": (
+
+        "hourly": (
             "pm10,"
             "pm2_5,"
             "carbon_monoxide,"
             "nitrogen_dioxide,"
             "sulphur_dioxide,"
-            "ozone,"
-            "ammonia"
+            "ozone"
         ),
+
+        # Get the previous 24 hours
+        "past_hours": 24,
+
+        # No future forecast needed for the live AQI
+        "forecast_hours": 0,
+
         "timezone": "auto"
     }
 
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
+
         if response.status_code != 200:
+            print("Open-Meteo HTTP error:", response.status_code)
             return {}
 
         data = response.json()
-        current = data.get("current", {})
+
+        hourly = data.get("hourly", {})
+
+        if not hourly:
+            print("Open-Meteo hourly data missing")
+            return {}
+
+        def average(values):
+            valid = []
+
+            for value in values or []:
+                try:
+                    if value is not None:
+                        valid.append(float(value))
+                except (TypeError, ValueError):
+                    pass
+
+            if not valid:
+                return None
+
+            return sum(valid) / len(valid)
+
         return {
-            "PM2.5": current.get("pm2_5"),
-            "PM10": current.get("pm10"),
-            "NO2": current.get("nitrogen_dioxide"),
-            "SO2": current.get("sulphur_dioxide"),
-            "CO": current.get("carbon_monoxide"),
-            "O3": current.get("ozone"),
-            "NH3": current.get("ammonia"),
-        }
+    "PM2.5": round(average(hourly.get("pm2_5")), 2) if average(hourly.get("pm2_5")) is not None else None,
+    "PM10": round(average(hourly.get("pm10")), 2) if average(hourly.get("pm10")) is not None else None,
+    "NO2": round(average(hourly.get("nitrogen_dioxide")), 2) if average(hourly.get("nitrogen_dioxide")) is not None else None,
+    "SO2": round(average(hourly.get("sulphur_dioxide")), 2) if average(hourly.get("sulphur_dioxide")) is not None else None,
+    "CO": round(average(hourly.get("carbon_monoxide")), 2) if average(hourly.get("carbon_monoxide")) is not None else None,
+    "O3": round(average(hourly.get("ozone")), 2) if average(hourly.get("ozone")) is not None else None,
+    "NH3": None
+}
+
     except Exception as error:
-        print("Open-Meteo raw fetch error:", error)
+        print("Open-Meteo hourly fetch error:", error)
         return {}
 
+# =====================================
+# MAIN AQI DATA HANDLER
+# =====================================
+
+
+# =====================================
+# OPEN-METEO AQI CALCULATOR
+# =====================================
 
 def get_open_meteo_aqi(latitude, longitude, city_name):
     """
-    Fetches real-time pollutant metrics from Open-Meteo Air Quality
-    and calculates standard Indian CPCB AQI.
+    Fetch pollutant data from Open-Meteo and calculate
+    AQI using the CPCB/Indian NAQI breakpoint system.
     """
-    om_data = get_open_meteo_raw_pollutants(latitude, longitude)
-    if not om_data:
+
+    pollutants = get_open_meteo_raw_pollutants(latitude, longitude)
+
+    if not pollutants:
         return None
 
-    pm25 = om_data.get("PM2.5")
-    pm10 = om_data.get("PM10")
-    no2 = om_data.get("NO2")
-    so2 = om_data.get("SO2")
-    co = om_data.get("CO")
-    o3 = om_data.get("O3")
-    nh3 = om_data.get("NH3")
+    pm25 = pollutants.get("PM2.5")
+    pm10 = pollutants.get("PM10")
+    no2 = pollutants.get("NO2")
+    so2 = pollutants.get("SO2")
+    co = pollutants.get("CO")
+    o3 = pollutants.get("O3")
+    nh3 = pollutants.get("NH3")
 
     aqi, category, prominent, sub_indices = calculate_aqi_details(
         pm25=pm25,
@@ -419,23 +469,30 @@ def get_open_meteo_aqi(latitude, longitude, city_name):
         nh3=nh3
     )
 
+    if aqi is None:
+        print(f"No valid AQI data available for {city_name}.")
+        return None
+
     return {
         "city": city_name,
-        "station": f"Atmospheric Model ({city_name})",
-        "station_distance_km": 0.0,
-        "source": "Open-Meteo AQI (CPCB Standard)",
+        "latitude": float(latitude),
+        "longitude": float(longitude),
+
         "aqi": aqi,
         "category": category,
-        "status": category,
         "prominent_pollutant": prominent,
+
+        "pm25": pm25,
+        "pm10": pm10,
+        "no2": no2,
+        "so2": so2,
+        "co": co,
+        "o3": o3,
+        "nh3": nh3,
+
         "sub_indices": sub_indices,
-        "pm25": round(float(pm25), 2) if pm25 is not None else None,
-        "pm10": round(float(pm10), 2) if pm10 is not None else None,
-        "no2": round(float(no2), 2) if no2 is not None else None,
-        "co": round(float(co) / 1000.0, 2) if co is not None else None,  # in mg/m3
-        "o3": round(float(o3), 2) if o3 is not None else None,
-        "so2": round(float(so2), 2) if so2 is not None else None,
-        "nh3": round(float(nh3), 2) if nh3 is not None else None,
+
+        "source": "Open-Meteo + CPCB NAQI calculation"
     }
 
 
@@ -445,19 +502,28 @@ def get_open_meteo_aqi(latitude, longitude, city_name):
 
 def get_aqi_data(latitude, longitude, city_name):
     """
-    Returns real-time AQI using Open-Meteo with CPCB-standard calculation.
-    Open-Meteo is used directly so the dashboard is not blocked by
-    an unavailable/slow CPCB API.
+    Returns AQI using Open-Meteo pollutant data
+    with CPCB-standard AQI calculation.
     """
+
     try:
         print(f"Fetching Open-Meteo AQI for {city_name}...")
-        result = get_open_meteo_aqi(latitude, longitude, city_name)
+
+        result = get_open_meteo_aqi(
+            latitude,
+            longitude,
+            city_name
+        )
+
         if result:
             print("Open-Meteo AQI result:", result)
             return result
+
         print(f"Open-Meteo AQI unavailable for {city_name}.")
         return None
+
     except Exception as error:
         print("get_aqi_data error:", error)
         return None
+
 
