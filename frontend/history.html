@@ -84,7 +84,8 @@
                     <input type="date" id="startDate"> <span>to</span> <input type="date" id="endDate">
                     <button class="btn" id="applyCustom" type="button">Apply</button>
                 </div>
-                <select class="city-select" id="citySelect" title="Switch city"></select>
+                <select class="city-select" id="stdSelect" title="AQI standard" style="margin-left:auto;min-width:140px"><option value="naqi">Indian NAQI</option><option value="us">US AQI</option></select>
+                <select class="city-select" id="citySelect" title="Switch city" style="margin-left:0"></select>
             </div>
 
             <div class="summary-grid">
@@ -103,7 +104,7 @@
 
             <div id="chartsArea">
                 <div class="card" style="margin-bottom:22px">
-                    <div class="chart-head"><h2>📈 AQI Trend</h2><span class="chip" id="chartStatus">Last 24 hours</span></div>
+                    <div class="chart-head"><h2>📈 AQI Trend <span style="font-size:13px;color:var(--muted);font-weight:600" id="stdNote"></span></h2><span class="chip" id="chartStatus">Last 24 hours</span></div>
                     <div class="chart-wrap"><canvas id="aqiChart"></canvas></div>
                 </div>
 
@@ -174,6 +175,12 @@ const RANGE_TEXT = { "24h": "Last 24 hours", "7d": "Last 7 days", "30d": "Last 3
 const num = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
 const avg = (a) => a.reduce((s, v) => s + v, 0) / a.length;
 
+// which AQI scale? (same switch as the dashboard)
+function getSettings() { try { return JSON.parse(localStorage.getItem("airsense_settings")) || {}; } catch (e) { return {}; } }
+let std = getSettings().aqiStandard === "us" ? "us" : "naqi";
+const val = (r) => num(std === "us" ? r.us_aqi : r.aqi);
+const stdLabel = () => (std === "us" ? "US AQI" : "Indian NAQI");
+
 function parseTs(ts) { return new Date(String(ts).replace(" ", "T")); }
 
 // Reduce many points to <= max by averaging buckets (keeps charts fast & readable)
@@ -184,7 +191,7 @@ function downsample(rows, max = 300) {
     for (let i = 0; i < rows.length; i += size) {
         const chunk = rows.slice(i, i + size);
         const pick = (k) => { const v = chunk.map((r) => num(r[k])).filter((x) => x !== null); return v.length ? +avg(v).toFixed(1) : null; };
-        out.push({ timestamp: chunk[Math.floor(chunk.length / 2)].timestamp, aqi: pick("aqi"), temperature: pick("temperature"), humidity: pick("humidity"), pm25: pick("pm25"), pm10: pick("pm10"), traffic_speed: pick("traffic_speed") });
+        out.push({ timestamp: chunk[Math.floor(chunk.length / 2)].timestamp, aqi: pick("aqi"), us_aqi: pick("us_aqi"), temperature: pick("temperature"), humidity: pick("humidity"), pm25: pick("pm25"), pm10: pick("pm10"), traffic_speed: pick("traffic_speed") });
     }
     return out;
 }
@@ -197,6 +204,10 @@ function labelFor(ts, spanHours) {
 }
 
 function aqiColor(v) {
+    if (std === "us") {
+        if (v <= 50) return "#2ecf8f"; if (v <= 100) return "#f2c230"; if (v <= 150) return "#f28a30";
+        if (v <= 200) return "#e5484d"; if (v <= 300) return "#9b2c4a"; return "#6b1d36";
+    }
     if (v <= 50) return "#2ecf8f"; if (v <= 100) return "#8fd14f"; if (v <= 200) return "#f2c230";
     if (v <= 300) return "#f28a30"; if (v <= 400) return "#e5484d"; return "#9b2c4a";
 }
@@ -253,6 +264,7 @@ async function loadHistory() {
     }
 
     hideEmpty();
+    $("stdNote").textContent = "· " + stdLabel();
     setCustomDefaults(data.latest);
     $("latestText").textContent = `Latest reading: ${parseTs(data.latest).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`;
 
@@ -262,7 +274,10 @@ async function loadHistory() {
     if (ageDays > 2) toast(`Showing the most recent saved data (${Math.floor(ageDays)} days old).`);
 
     // summary
-    const aqiVals = rows.map((r) => num(r.aqi)).filter((v) => v !== null);
+    const aqiVals = rows.map((r) => val(r)).filter((v) => v !== null);
+    if (!aqiVals.length) {
+        toast(`No ${stdLabel()} values in this period (older live readings only have the other scale). Try a longer range or switch the scale.`);
+    }
     $("avgAQI").textContent = aqiVals.length ? Math.round(avg(aqiVals)) : "--";
     $("maxAQI").textContent = aqiVals.length ? Math.max(...aqiVals) : "--";
     $("minAQI").textContent = aqiVals.length ? Math.min(...aqiVals) : "--";
@@ -275,16 +290,16 @@ async function loadHistory() {
     const pts = downsample(rows);
     const span = (parseTs(rows[rows.length - 1].timestamp) - parseTs(rows[0].timestamp)) / 3600000;
     const labels = pts.map((r) => labelFor(r.timestamp, span));
-    const aqiData = pts.map((r) => num(r.aqi));
-    const tip = (r) => [`AQI: ${r.aqi ?? "--"}`, `Temp: ${r.temperature ?? "--"}°C`, `Humidity: ${r.humidity ?? "--"}%`];
+    const aqiData = pts.map((r) => val(r));
+    const tip = (r) => [`${stdLabel()}: ${val(r) ?? "--"}`, `Temp: ${r.temperature ?? "--"}°C`, `Humidity: ${r.humidity ?? "--"}%`];
 
     if (typeof Chart === "undefined") { toast("Chart library could not load — check your internet connection."); return; }
 
     makeChart("aqiChart", labels, [{
-        label: "AQI", data: aqiData, borderWidth: 3, tension: 0.35, fill: true, pointRadius: pts.length > 80 ? 0 : 3, pointHoverRadius: 6,
+        label: stdLabel(), data: aqiData, borderWidth: 3, tension: 0.35, fill: true, pointRadius: pts.length > 80 ? 0 : 3, pointHoverRadius: 6,
         borderColor: "#35d39a", backgroundColor: "rgba(53,211,154,.14)",
         segment: { borderColor: (c) => aqiColor(Math.max(c.p0.parsed.y || 0, c.p1.parsed.y || 0)) },
-    }], "AQI", { zero: true });
+    }], stdLabel(), { zero: true });
     charts.aqiChart.options.plugins.tooltip = { callbacks: { afterBody: (items) => tip(pts[items[0].dataIndex]).slice(1) } };
     charts.aqiChart.update();
 
@@ -310,7 +325,7 @@ function insight(rows, aqi) {
 
     // worst & best hour of day
     const byHour = {};
-    rows.forEach((r) => { const v = num(r.aqi); if (v === null) return; const h = parseTs(r.timestamp).getHours(); (byHour[h] = byHour[h] || []).push(v); });
+    rows.forEach((r) => { const v = val(r); if (v === null) return; const h = parseTs(r.timestamp).getHours(); (byHour[h] = byHour[h] || []).push(v); });
     const hours = Object.entries(byHour).map(([h, v]) => [Number(h), avg(v)]);
     let extra = "";
     if (hours.length >= 6) {
@@ -371,6 +386,13 @@ document.querySelectorAll(".filter-btn[data-range]").forEach((btn) =>
 );
 $("applyCustom").addEventListener("click", loadHistory);
 $("citySelect").addEventListener("change", (e) => switchCity(e.target.value));
+$("stdSelect").value = std;
+$("stdSelect").addEventListener("change", (e) => {
+    std = e.target.value;
+    const s = getSettings(); s.aqiStandard = std;
+    localStorage.setItem("airsense_settings", JSON.stringify(s));
+    loadHistory();
+});
 document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-city]");
     if (t) switchCity(t.dataset.city);

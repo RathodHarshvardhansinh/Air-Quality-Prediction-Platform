@@ -1,0 +1,296 @@
+{
+  "trained_at": "2026-11-15 08:02:10",
+  "algorithms": [
+    "XGBoost",
+    "CatBoost"
+  ],
+  "features": [
+    "pm25",
+    "pm10",
+    "no2",
+    "so2",
+    "o3",
+    "co",
+    "temperature",
+    "humidity",
+    "pressure",
+    "wind_speed",
+    "naqi",
+    "us_aqi",
+    "naqi_lag1",
+    "naqi_lag2",
+    "naqi_lag3",
+    "naqi_lag6",
+    "naqi_lag12",
+    "naqi_lag24",
+    "us_aqi_lag1",
+    "us_aqi_lag2",
+    "us_aqi_lag3",
+    "us_aqi_lag6",
+    "us_aqi_lag12",
+    "us_aqi_lag24",
+    "pm25_lag1",
+    "pm25_lag2",
+    "pm25_lag3",
+    "pm25_lag6",
+    "pm25_lag12",
+    "pm25_lag24",
+    "pm25_m3",
+    "pm25_m6",
+    "pm25_m24",
+    "pm25_std6",
+    "pm10_m6",
+    "pm10_m24",
+    "o3_m8",
+    "naqi_d1",
+    "naqi_d3",
+    "us_aqi_d3",
+    "pm25_d3",
+    "pressure_d3",
+    "temperature_d3",
+    "humidity_d3",
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "month_sin",
+    "month_cos"
+  ],
+  "cities": {
+    "Visnagar": 14156
+  },
+  "skipped_cities": {
+    "Ahmedabad": 0,
+    "Anand": 0,
+    "Bhavnagar": 0,
+    "Bhopal": 0,
+    "Chandigarh": 0,
+    "Chennai": 0,
+    "Delhi": 0,
+    "Gandhinagar": 0,
+    "Hyderabad": 0,
+    "Indore": 0,
+    "Jaipur": 0,
+    "Jamnagar": 0,
+    "Junagadh": 0,
+    "Kolkata": 0,
+    "Lucknow": 0,
+    "Mehsana": 0,
+    "Mumbai": 0,
+    "Nagpur": 0,
+    "Patna": 0,
+    "Pune": 0,
+    "Rajkot": 0,
+    "Surat": 0,
+    "Udaipur": 0,
+    "Vadodara": 0
+  },
+  "rows": {
+    "train": 9928,
+    "val": 1418,
+    "test": 3307
+  },
+  "data_range": [
+    "2025-01-01 00:00:00",
+    "2026-09-03 12:00:00"
+  ],
+  "targets": {
+    "naqi_1h": {
+      "choice": "avg",
+      "val_mae": {
+        "xgb": 0.93,
+        "cat": 0.91,
+        "avg": 0.9
+      },
+      "test": {
+        "persistence": {
+          "mae": 3.61,
+          "rmse": 4.83,
+          "r2": 0.951
+        },
+        "random_forest": {
+          "mae": 0.87,
+          "rmse": 1.31,
+          "r2": 0.996
+        },
+        "xgboost": {
+          "mae": 0.78,
+          "rmse": 1.33,
+          "r2": 0.996
+        },
+        "catboost": {
+          "mae": 0.75,
+          "rmse": 1.12,
+          "r2": 0.997
+        },
+        "xgb+cat average": {
+          "mae": 0.75,
+          "rmse": 1.18,
+          "r2": 0.997
+        }
+      },
+      "best_iterations": {
+        "xgb": 1022,
+        "cat": 1499
+      },
+      "top_features": {
+        "hour_cos": 0.526,
+        "naqi_d1": 0.2,
+        "hour_sin": 0.043,
+        "naqi_lag1": 0.031,
+        "temperature_d3": 0.028,
+        "o3": 0.027,
+        "naqi_lag3": 0.026,
+        "naqi_lag2": 0.022
+      }
+    },
+    "naqi_6h": {
+      "choice": "avg",
+      "val_mae": {
+        "xgb": 6.58,
+        "cat": 6.51,
+        "avg": 6.44
+      },
+      "test": {
+        "persistence": {
+          "mae": 18.49,
+          "rmse": 24.0,
+          "r2": -0.207
+        },
+        "random_forest": {
+          "mae": 5.01,
+          "rmse": 7.0,
+          "r2": 0.897
+        },
+        "xgboost": {
+          "mae": 4.64,
+          "rmse": 6.8,
+          "r2": 0.903
+        },
+        "catboost": {
+          "mae": 4.55,
+          "rmse": 6.17,
+          "r2": 0.92
+        },
+        "xgb+cat average": {
+          "mae": 4.5,
+          "rmse": 6.29,
+          "r2": 0.917
+        }
+      },
+      "best_iterations": {
+        "xgb": 663,
+        "cat": 1498
+      },
+      "top_features": {
+        "temperature_d3": 0.279,
+        "hour_sin": 0.19,
+        "o3_m8": 0.176,
+        "hour_cos": 0.097,
+        "naqi_lag1": 0.07,
+        "naqi_lag2": 0.019,
+        "naqi_d1": 0.015,
+        "o3": 0.008
+      }
+    },
+    "us_1h": {
+      "choice": "avg",
+      "val_mae": {
+        "xgb": 2.02,
+        "cat": 1.97,
+        "avg": 1.96
+      },
+      "test": {
+        "persistence": {
+          "mae": 2.35,
+          "rmse": 3.74,
+          "r2": 0.934
+        },
+        "random_forest": {
+          "mae": 1.45,
+          "rmse": 2.31,
+          "r2": 0.975
+        },
+        "xgboost": {
+          "mae": 1.38,
+          "rmse": 2.16,
+          "r2": 0.978
+        },
+        "catboost": {
+          "mae": 1.36,
+          "rmse": 2.1,
+          "r2": 0.979
+        },
+        "xgb+cat average": {
+          "mae": 1.35,
+          "rmse": 2.11,
+          "r2": 0.979
+        }
+      },
+      "best_iterations": {
+        "xgb": 666,
+        "cat": 1484
+      },
+      "top_features": {
+        "pm25_d3": 0.213,
+        "naqi_d3": 0.062,
+        "hour_cos": 0.054,
+        "naqi_d1": 0.052,
+        "pm25_lag2": 0.045,
+        "us_aqi_lag1": 0.043,
+        "us_aqi_d3": 0.038,
+        "hour_sin": 0.034
+      }
+    },
+    "us_6h": {
+      "choice": "avg",
+      "val_mae": {
+        "xgb": 11.29,
+        "cat": 11.39,
+        "avg": 11.26
+      },
+      "test": {
+        "persistence": {
+          "mae": 9.86,
+          "rmse": 13.84,
+          "r2": 0.097
+        },
+        "random_forest": {
+          "mae": 7.75,
+          "rmse": 10.45,
+          "r2": 0.486
+        },
+        "xgboost": {
+          "mae": 7.45,
+          "rmse": 10.14,
+          "r2": 0.515
+        },
+        "catboost": {
+          "mae": 7.39,
+          "rmse": 9.99,
+          "r2": 0.53
+        },
+        "xgb+cat average": {
+          "mae": 7.36,
+          "rmse": 9.98,
+          "r2": 0.531
+        }
+      },
+      "best_iterations": {
+        "xgb": 135,
+        "cat": 350
+      },
+      "top_features": {
+        "hour_cos": 0.238,
+        "us_aqi_lag1": 0.06,
+        "us_aqi_lag2": 0.052,
+        "naqi_d1": 0.05,
+        "pm25_lag2": 0.048,
+        "naqi_d3": 0.046,
+        "pm25_lag1": 0.025,
+        "o3": 0.024
+      }
+    }
+  },
+  "note": "Models predict the CHANGE from the current AQI; prediction = current + change."
+}

@@ -1,3 +1,15 @@
+# ---------------------------------------------------------------------------
+# RETIRED: this old importer stored the US AQI inside the `aqi` column (and could add
+# duplicate rows), which is what made the database inconsistent.
+# Use instead:   python backend/fetch_city_history.py --cities "Surat,Rajkot"
+# (run with --force only if you really want the old behaviour, then run fix_database.py)
+# ---------------------------------------------------------------------------
+import sys as _sys
+if "--force" not in _sys.argv:
+    raise SystemExit("This script is retired - use  python backend/fetch_city_history.py  "
+                     "(see the note at the top of this file).")
+_sys.argv = [a for a in _sys.argv if a != "--force"]
+
 import sqlite3
 import pandas as pd
 import os

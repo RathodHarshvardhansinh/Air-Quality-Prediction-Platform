@@ -55,12 +55,21 @@
 
         <section class="dashboard-container">
 
+            <div class="loc-notice" id="locNotice" hidden>
+                <div class="loc-top">
+                    <span id="locNoticeText"></span>
+                    <button class="btn ghost" id="locNoticeClose" type="button">Dismiss</button>
+                </div>
+                <div class="chips" id="cityChips"></div>
+            </div>
+
             <div class="welcome-section">
                 <div>
                     <p class="eyebrow">ENVIRONMENTAL OVERVIEW</p>
                     <h1><span id="greetingText">Hello</span>, <span id="welcomeName">there</span>.</h1>
-                    <p class="place-line">📍 <b id="placeLabel">Finding your location...</b>
+                    <p class="place-line">📍 <b id="placeLabel">Finding your location...</b> <span class="place-via" id="placeVia"></span>
                         <span id="clockText"></span></p>
+                    <div class="source-chips" id="sourceChips"></div>
                 </div>
                 <div class="last-updated" id="statusPill">
                     <span class="status-dot"></span>
@@ -78,7 +87,13 @@
                                 <span class="card-label">LIVE AIR QUALITY</span>
                                 <h2 id="aqiCity">--</h2>
                             </div>
-                            <span class="live-badge">● LIVE</span>
+                            <div class="hero-tools">
+                                <div class="std-toggle" title="Switch between the Indian and the US AQI scale">
+                                    <button type="button" data-std="naqi">IN</button><button type="button" data-std="us">US</button>
+                                </div>
+                                <button class="info-btn" id="explainButton" type="button" title="Why is this different from other websites?">ⓘ</button>
+                                <span class="live-badge">● LIVE</span>
+                            </div>
                         </div>
 
                         <div class="aqi-main">
@@ -89,7 +104,7 @@
                                 </svg>
                                 <div class="ring-center">
                                     <strong id="liveAqi" class="skeleton">000</strong>
-                                    <small>AQI</small>
+                                    <small id="aqiUnit">NAQI</small>
                                 </div>
                             </div>
                             <div class="aqi-text">
@@ -99,7 +114,7 @@
                             </div>
                         </div>
 
-                        <div class="aqi-scale"><div class="marker" id="aqiMarker"></div></div>
+                        <div class="aqi-scale" id="aqiScale" data-std="naqi"><div class="marker" id="aqiMarker"></div></div>
                         <div class="aqi-footer">
                             <span id="aqiUpdated">Updating...</span>
                             <span>Real-time data</span>
@@ -120,15 +135,23 @@
                         </div>
                         <div class="forecast-display">
                             <div class="small-label">PREDICTION</div>
-                            <div class="forecast-value"><span id="predictionValue">--</span><small>AQI</small></div>
+                            <div class="forecast-value"><span id="predictionValue">--</span><small id="predictionUnit">AQI</small></div>
                             <div class="forecast-status" id="predictionValueStatus">Loading...</div>
                             <div class="forecast-delta" id="predictionDelta"></div>
                         </div>
                         <div class="card-footer">
-                            <span>✦ AI Prediction Model</span>
+                            <span id="predictionModel">✦ AI Prediction Model</span>
                             <span id="predictionCity">--</span>
                         </div>
                     </div>
+                </div>
+
+                <div class="card iot-card" id="iotCard" style="margin-bottom:22px">
+                    <div class="card-header">
+                        <div><span class="card-label">DATA SOURCES</span><h2>IoT Sensor &amp; External API</h2></div>
+                        <span class="card-icon">📟</span>
+                    </div>
+                    <div id="iotBody"><p class="empty-note">Checking for an IoT device at this location...</p></div>
                 </div>
 
                 <div class="grid grid-3">
@@ -194,7 +217,7 @@
                         <p class="empty-note" id="airSourceNote" style="margin-top:18px"></p>
                     </div>
                     <div class="card">
-                        <div class="card-header"><div><span class="card-label">INDIAN NAQI SCALE</span><h2>What the numbers mean</h2></div></div>
+                        <div class="card-header"><div><span class="card-label" id="legendTitle">AQI SCALE</span><h2>What the numbers mean</h2></div></div>
                         <div class="legend" id="aqiLegend"></div>
                     </div>
                 </div>
@@ -241,6 +264,13 @@
                 <div class="card" style="max-width:720px">
                     <div class="card-header"><div><span class="card-label">PREFERENCES</span><h2>Settings</h2></div></div>
                     <div class="settings-row">
+                        <div><strong>AQI standard</strong><p>Indian NAQI (CPCB) or the US AQI used by most global websites and apps.</p></div>
+                        <select id="setStandard" class="btn ghost" style="padding:10px 12px">
+                            <option value="naqi">Indian NAQI</option>
+                            <option value="us">US AQI</option>
+                        </select>
+                    </div>
+                    <div class="settings-row">
                         <div><strong>Auto-detect my location</strong><p>Use GPS every time the dashboard opens.</p></div>
                         <label class="switch"><input type="checkbox" id="setAutoLocate" checked><span></span></label>
                     </div>
@@ -253,7 +283,7 @@
                         <label class="switch"><input type="checkbox" id="setNotify"><span></span></label>
                     </div>
                     <div class="settings-row">
-                        <div><strong>Saved location</strong><p id="savedPlaceText">None</p></div>
+                        <div><strong>Saved location</strong><p id="savedPlaceText">None</p><p>A city you search for is remembered until you press the ⌖ button.</p></div>
                         <button class="btn ghost" id="clearPlaceButton" type="button">Clear</button>
                     </div>
                 </div>
@@ -282,6 +312,24 @@
         <div class="chart-box"><canvas id="analyticsChart"></canvas></div>
         <p class="empty-note" id="analyticsChartNote"></p>
         <a class="analytics-link" id="analyticsHistoryLink" href="history.html">Open full history →</a>
+    </div>
+</div>
+
+<!-- ================= WHY DIFFERENT FROM OTHER SITES ================= -->
+<div id="explainOverlay" class="analytics-overlay">
+    <div id="analyticsPanel" class="explain">
+        <button id="closeExplain" type="button" style="position:absolute;top:18px;right:18px;border:none;background:#eef3f1;width:38px;height:38px;border-radius:50%;cursor:pointer">✕</button>
+        <div class="analytics-header">
+            <h1>Why can another website show a different AQI?</h1>
+            <p>Both can be "right" — they just measure different things.</p>
+        </div>
+        <ol class="explain-list">
+            <li><b>Different scale.</b> India uses the <b>NAQI</b> (CPCB). IQAir, Google, AccuWeather and most phone apps use the <b>US AQI</b>, which gives higher numbers for the same air (e.g. PM2.5 of 45 µg/m³ = NAQI 76 but US AQI 124). Use the <b>IN / US</b> switch to compare like with like.</li>
+            <li><b>Different data source.</b> A <b>ground station</b> measures the air at one spot; a <b>model estimate</b> (satellite + weather model) covers the whole area but can be off at street level. The line under the AQI tells you which one you are seeing.</li>
+            <li><b>Different averaging.</b> NAQI uses 24-hour averages (8-hour for CO and ozone), so it moves slowly. The US AQI uses NowCast, which reacts within hours. Some sites show the raw last-hour value instead.</li>
+            <li><b>Different place and time.</b> The nearest station can be several km away, and each site refreshes at a different moment.</li>
+        </ol>
+        <p class="empty-note">AirSense shows the exact formula, source and time it used — nothing is hidden or adjusted.</p>
     </div>
 </div>
 

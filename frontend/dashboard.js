@@ -35,26 +35,44 @@ function animateNumber(el, to, decimals = 0, duration = 900) {
 }
 
 // ---------- settings ----------
-const defaultSettings = { autoLocate: false, autoRefresh: true, notify: false };
+const defaultSettings = { autoLocate: true, autoRefresh: true, notify: false, aqiStandard: "naqi" };
 let settings = { ...defaultSettings, ...JSON.parse(localStorage.getItem("airsense_settings") || "{}") };
 const saveSettings = () => localStorage.setItem("airsense_settings", JSON.stringify(settings));
 
 // =====================================================
-// AQI LEVELS  (Indian NAQI / CPCB)
+// AQI LEVELS  -  Indian NAQI (CPCB)  and  US EPA AQI
 // =====================================================
-const LEVELS = [
-    { key: "good",         label: "Good",         max: 50,  range: "0 – 50",    color: "#2ecf8f" },
-    { key: "satisfactory", label: "Satisfactory", max: 100, range: "51 – 100",  color: "#8fd14f" },
-    { key: "moderate",     label: "Moderate",     max: 200, range: "101 – 200", color: "#f2c230" },
-    { key: "poor",         label: "Poor",         max: 300, range: "201 – 300", color: "#f28a30" },
-    { key: "verypoor",     label: "Very Poor",    max: 400, range: "301 – 400", color: "#e5484d" },
+const NAQI_LEVELS = [
+    { key: "good",         label: "Good",         max: 50,   range: "0 – 50",    color: "#2ecf8f" },
+    { key: "satisfactory", label: "Satisfactory", max: 100,  range: "51 – 100",  color: "#8fd14f" },
+    { key: "moderate",     label: "Moderate",     max: 200,  range: "101 – 200", color: "#f2c230" },
+    { key: "poor",         label: "Poor",         max: 300,  range: "201 – 300", color: "#f28a30" },
+    { key: "verypoor",     label: "Very Poor",    max: 400,  range: "301 – 400", color: "#e5484d" },
     { key: "severe",       label: "Severe",       max: 9999, range: "401 – 500", color: "#9b2c4a" },
 ];
+const US_LEVELS = [
+    { key: "good",     label: "Good",                           max: 50,   range: "0 – 50",    color: "#2ecf8f" },
+    { key: "moderate", label: "Moderate",                       max: 100,  range: "51 – 100",  color: "#f2c230" },
+    { key: "poor",     label: "Unhealthy for Sensitive Groups", max: 150,  range: "101 – 150", color: "#f28a30" },
+    { key: "verypoor", label: "Unhealthy",                      max: 200,  range: "151 – 200", color: "#e5484d" },
+    { key: "severe",   label: "Very Unhealthy",                 max: 300,  range: "201 – 300", color: "#9b2c4a" },
+    { key: "severe",   label: "Hazardous",                      max: 9999, range: "301 +",     color: "#6b1d36" },
+];
 
-function levelOf(aqi) {
+const currentStd = () => (settings.aqiStandard === "us" ? "us" : "naqi");
+const levelsFor = (std) => (std === "us" ? US_LEVELS : NAQI_LEVELS);
+const stdName = (std) => (std === "us" ? "US AQI" : "Indian NAQI");
+
+function levelOf(aqi, std = currentStd()) {
     if (!has(aqi)) return { key: "none", label: "Unavailable", color: "#9aa8a3" };
-    return LEVELS.find((l) => aqi <= l.max) || LEVELS[LEVELS.length - 1];
+    const list = levelsFor(std);
+    return list.find((l) => aqi <= l.max) || list[list.length - 1];
 }
+
+// the value / sub-indices / prominent pollutant for the selected standard
+const aqiValue = (d, std = currentStd()) => (d ? (std === "us" ? d.us_aqi : d.aqi) : null);
+const subsOf = (d, std = currentStd()) => (d ? (std === "us" ? d.us_sub_indices : d.sub_indices) : null);
+const prominentOf = (d, std = currentStd()) => (d ? (std === "us" ? d.us_prominent_pollutant : d.prominent_pollutant) : null);
 
 const ADVICE = {
     good: {
@@ -73,19 +91,19 @@ const ADVICE = {
         tips: ["Sensitive groups: reduce long outdoor exertion.", "Keep windows closed in peak traffic hours.", "Healthy adults can continue normally."],
     },
     poor: {
-        icon: "🔴", title: "Poor — health effects possible",
+        icon: "🔴", title: "Health effects possible",
         text: "Everyone may begin to feel effects; sensitive groups may feel more serious ones.",
         tips: ["Limit outdoor exertion, especially children & elderly.", "Wear an N95 mask outside.", "Use an air purifier indoors if you have one."],
-        alert: "Pollution alert: air quality is Poor — avoid long outdoor exposure.",
+        alert: "Pollution alert: air quality is poor — avoid long outdoor exposure.",
     },
     verypoor: {
-        icon: "🟣", title: "Very Poor — health warning",
+        icon: "🟣", title: "Health warning",
         text: "The entire population is likely to be affected.",
         tips: ["Avoid outdoor physical activity.", "Keep doors & windows closed; run a purifier.", "People with lung/heart conditions should stay indoors."],
-        alert: "Pollution alert: air quality is Very Poor — stay indoors where possible.",
+        alert: "Pollution alert: air quality is very poor — stay indoors where possible.",
     },
     severe: {
-        icon: "⛔", title: "Severe — health emergency",
+        icon: "⛔", title: "Health emergency",
         text: "Serious risk of respiratory effects for everyone.",
         tips: ["Stay indoors with windows closed.", "Avoid all outdoor activity.", "Seek medical help if breathing is difficult."],
         alert: "Severe pollution alert: air is hazardous — stay indoors.",
@@ -99,7 +117,8 @@ function setUserName(name) {
     const clean = (name || "").trim();
     if (!clean) return;
     $("userName").textContent = clean;
-    $("welcomeName").textContent = clean.split(" ")[0];
+    const first = clean.split(" ")[0];
+    $("welcomeName").textContent = first.charAt(0).toUpperCase() + first.slice(1);
     $("userAvatar").textContent = clean[0].toUpperCase();
 }
 
@@ -164,7 +183,7 @@ showView(location.hash.replace("#", "") || "dashboard");
 // =====================================================
 // STATE
 // =====================================================
-const state = { place: null, env: null, predictions: null, selected: "1h", requestId: 0, loadedOnce: false };
+const state = { place: null, env: null, predictions: null, selected: "1h", requestId: 0, loadedOnce: false, via: "", pendingVia: "", locHelp: "" };
 
 function setStatus(kind, text) {
     const pill = $("statusPill");
@@ -185,13 +204,15 @@ const POLLUTANTS = [
 ];
 
 function pollutantTiles(data) {
+    const std = currentStd();
+    const subs = subsOf(data, std) || {};
     return POLLUTANTS.map((p) => {
         const value = data ? data[p.id] : null;
-        const sub = data && data.sub_indices ? data.sub_indices[p.key] : null;
-        const lvl = levelOf(has(sub) ? sub : null);
+        const sub = subs[p.key];
+        const lvl = levelOf(has(sub) ? sub : null, std);
         const width = has(sub) ? Math.min((sub / 300) * 100, 100) : 0;
         return `
-            <div class="pollutant" data-level="${lvl.key}">
+            <div class="pollutant" data-level="${lvl.key}" title="${has(sub) ? stdName(std) + " sub-index: " + Math.round(sub) : ""}">
                 <span>${p.label}</span>
                 <strong>${has(value) ? value : "--"}</strong>
                 <small>${p.unit}</small>
@@ -204,36 +225,47 @@ function fillBars(root) {
     requestAnimationFrame(() => root.querySelectorAll(".bar i").forEach((b) => (b.style.width = b.dataset.w + "%")));
 }
 
-function renderAQI(data, errorMsg) {
-    const hero = $("heroCard");
-    $("liveAqi").classList.remove("skeleton");
+function sourceLine(data) {
+    if (!data) return "";
+    const dist = has(data.station_distance_km) && data.station_distance_km > 0 ? ` · ${data.station_distance_km} km away` : "";
+    const kind = data.source_type === "station"
+        ? `📡 Ground station: ${data.station || "CPCB"}${dist}`
+        : "🛰 Model estimate (no live station nearby) — can differ from local sensors";
+    const mixed = data.mixed_sources ? " · some gases filled from model" : "";
+    const when = data.measured_at ? ` · data from ${String(data.measured_at).replace("T", " ").slice(0, 16)}` : "";
+    return kind + mixed + when;
+}
 
+function renderAQI(data, errorMsg) {
+    const std = currentStd();
+    $("liveAqi").classList.remove("skeleton");
     $("aqiCity").textContent = state.place ? state.place.name : "--";
 
-    const aqi = data ? data.aqi : null;
-    const lvl = levelOf(aqi);
+    document.querySelectorAll(".std-toggle button").forEach((b) => b.classList.toggle("active", b.dataset.std === std));
+    $("aqiUnit").textContent = std === "us" ? "US AQI" : "NAQI";
+    $("aqiScale").dataset.std = std;
 
+    const aqi = aqiValue(data, std);
+    const lvl = levelOf(aqi, std);
     ["heroCard", "advisoryCard"].forEach((id) => ($(id).dataset.level = lvl.key));
 
     if (has(aqi)) {
         animateNumber($("liveAqi"), aqi, 0);
         $("ringFill").style.strokeDashoffset = 440 * (1 - Math.min(aqi / 500, 1));
         $("aqiMarker").style.left = `calc(${Math.min(aqi / 500, 1) * 100}% - 2px)`;
-        $("aqiStatus").textContent = data.status || data.category || lvl.label;
-        const prom = data.prominent_pollutant ? `Main pollutant: ${data.prominent_pollutant}.` : "";
-        $("aqiHint").textContent = `${ADVICE[lvl.key].text} ${prom}`;
-        const dist = has(data.station_distance_km) && data.station_distance_km > 0 ? ` · ${data.station_distance_km} km away` : "";
-        $("aqiSource").textContent = `Source: ${data.source || "—"}${data.station ? " · " + data.station : ""}${dist}`;
+        $("aqiStatus").textContent = lvl.label;
+        const prom = prominentOf(data, std);
+        const partial = data.partial && std === "naqi" ? " ⚠ Some pollutant readings are missing, so this may be underestimated." : "";
+        $("aqiHint").textContent = `${ADVICE[lvl.key].text}${prom ? " Main pollutant: " + prom + "." : ""}${partial}`;
     } else {
         $("liveAqi").textContent = "--";
         $("ringFill").style.strokeDashoffset = 440;
         $("aqiMarker").style.left = "0";
         $("aqiStatus").textContent = "AQI unavailable";
         $("aqiHint").textContent = errorMsg || "Could not read air quality for this location right now.";
-        $("aqiSource").textContent = "";
     }
-
-    $("aqiUpdated").textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    $("aqiSource").textContent = sourceLine(data);
+    $("aqiUpdated").textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " · " + stdName(std);
 
     // pollutant tiles (dashboard + air-quality page)
     $("pollutantsGrid").innerHTML = pollutantTiles(data);
@@ -241,12 +273,13 @@ function renderAQI(data, errorMsg) {
     fillBars($("pollutantsGrid"));
     fillBars($("pollutantsGridAir"));
     $("airSourceNote").textContent = data
-        ? `Bars show each pollutant's own sub-index (CPCB). ${data.station ? "Station: " + data.station + "." : ""}`
+        ? `Bars show each pollutant's own ${stdName(std)} sub-index. ${data.averaging || ""}`
         : "";
 
-    // legend
-    $("aqiLegend").innerHTML = LEVELS.map((l) => `
-        <div class="legend-row ${has(aqi) && l.key === lvl.key ? "current" : ""}">
+    // legend for the selected standard
+    $("legendTitle").textContent = std === "us" ? "US EPA AQI scale" : "Indian NAQI scale";
+    $("aqiLegend").innerHTML = levelsFor(std).map((l) => `
+        <div class="legend-row ${has(aqi) && l.label === lvl.label ? "current" : ""}">
             <i style="background:${l.color}"></i>${l.label}<span>${l.range}</span>
         </div>`).join("");
 
@@ -265,7 +298,7 @@ function renderAdvisory(aqi, lvl) {
     }
     const a = ADVICE[lvl.key];
     $("advisoryIcon").textContent = a.icon;
-    $("advisoryTitle").textContent = a.title;
+    $("advisoryTitle").textContent = `${lvl.label} — ${a.title.includes(" — ") ? a.title.split(" — ")[1] : a.title}`;
     $("advisoryText").textContent = a.text;
     $("advisoryTips").innerHTML = a.tips.map((t) => `<li>${t}</li>`).join("");
 
@@ -399,15 +432,19 @@ function showPrediction(type) {
     $("prediction1hButton").classList.toggle("active", type === "1h");
     $("prediction6hButton").classList.toggle("active", type === "6h");
 
+    const std = currentStd();
     const p = state.predictions;
-    const value = p ? (type === "1h" ? p.prediction_1h : p.prediction_6h) : null;
-    const lvl = levelOf(value);
+    const value = p ? (std === "us"
+        ? (type === "1h" ? p.us_prediction_1h : p.us_prediction_6h)
+        : (type === "1h" ? p.prediction_1h : p.prediction_6h)) : null;
+    const lvl = levelOf(value, std);
     $("forecastCard").dataset.level = lvl.key;
+    $("predictionUnit").textContent = std === "us" ? "US AQI" : "AQI";
 
     if (has(value)) {
         animateNumber($("predictionValue"), value, 0);
         $("predictionValueStatus").textContent = lvl.label;
-        const now = state.env && state.env.air_quality ? state.env.air_quality.aqi : null;
+        const now = aqiValue(state.env && state.env.air_quality, std);
         if (has(now)) {
             const diff = Math.round(value - now);
             $("predictionDelta").textContent =
@@ -415,20 +452,23 @@ function showPrediction(type) {
         } else {
             $("predictionDelta").textContent = "";
         }
+        $("predictionModel").textContent = `✦ ${p.model || "AI model"}` + (p.based_on ? ` · from ${p.based_on.slice(11)}` : "");
     } else {
         $("predictionValue").textContent = "--";
         $("predictionValueStatus").textContent = "Prediction unavailable";
         $("predictionDelta").textContent = state.predictionError || "";
+        $("predictionModel").textContent = "✦ AI Prediction Model";
     }
 }
 
-async function loadPredictions(cityName, requestId) {
+async function loadPredictions(place, requestId) {
     state.predictions = null;
     state.predictionError = "";
-    $("predictionCity").textContent = cityName;
+    $("predictionCity").textContent = place.name;
     $("predictionValueStatus").textContent = "Loading...";
     try {
-        const r = await fetch(`${API_BASE}/predict?city=${encodeURIComponent(cityName)}`);
+        const q = new URLSearchParams({ city: place.name, lat: place.latitude, lon: place.longitude });
+        const r = await fetch(`${API_BASE}/predict?${q}`);
         const d = await r.json();
         if (requestId !== state.requestId) return;
         if (!r.ok) throw new Error(d.error || "Prediction unavailable");
@@ -453,6 +493,7 @@ async function loadEnvironment(query, { silent = false } = {}) {
     if (!silent) {
         $("liveAqi").classList.add("skeleton");
         $("aqiStatus").textContent = "Loading...";
+        iotLoading();                       // never keep the previous place's IoT values on screen
         setStatus("", "Loading live data...");
     }
 
@@ -486,15 +527,18 @@ async function loadEnvironment(query, { silent = false } = {}) {
 
     state.env = env;
     state.place = env.location;
+    state.via = state.pendingVia || "search";
     state.loadedOnce = true;
     savePlace(env.location);
     rememberViewed(env.location.name);
     updatePlaceUi();
+    checkLocationSanity();
 
     const err = env.errors || {};
     renderAQI(env.air_quality, err.air_quality);
     renderWeather(env.weather);
     renderTraffic(env.traffic, err.traffic);
+    renderIoT(env.iot, env);
 
     const failed = Object.keys(err).length;
     setStatus(
@@ -503,7 +547,7 @@ async function loadEnvironment(query, { silent = false } = {}) {
                : `Live · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
     );
 
-    loadPredictions(env.location.name, requestId);
+    loadPredictions(env.location, requestId);
 }
 
 // =====================================================
@@ -524,7 +568,44 @@ function updatePlaceUi() {
     $("historyLink").href = `history.html?city=${encodeURIComponent(p.name)}`;
     $("analyticsHistoryLink").href = `history.html?city=${encodeURIComponent(p.name)}`;
     $("savedPlaceText").textContent = p.name;
+    const via = { gps: "detected by your browser", ip: "approximate (internet connection)",
+                  search: "chosen by you", saved: "your saved city" }[state.via] || "";
+    $("placeVia").textContent = via;
 }
+
+// ---------- is a detected position believable? ----------
+// A wrong position (VPN, proxy, bad Wi-Fi/IP location) is the #1 cause of "this is not my place".
+const deviceInIndia = () => /^Asia\/(Kolkata|Calcutta)$/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || "");
+const insideIndia = (lat, lon) => lat >= 6 && lat <= 37.6 && lon >= 68 && lon <= 97.6;
+const plausible = (lat, lon) => !deviceInIndia() || insideIndia(lat, lon);
+
+const POPULAR_CITIES = ["Visnagar", "Mehsana", "Ahmedabad", "Gandhinagar", "Surat", "Vadodara", "Rajkot",
+    "Delhi", "Mumbai", "Pune", "Bengaluru", "Hyderabad", "Chennai", "Kolkata", "Jaipur", "Lucknow"];
+
+function showLocationHelp(text) {
+    $("locNoticeText").textContent = text;
+    $("cityChips").innerHTML = POPULAR_CITIES.map((c) => `<button type="button" class="chip-btn" data-city="${c}">${c}</button>`).join("");
+    $("locNotice").hidden = false;
+}
+
+function checkLocationSanity() {
+    if (state.via === "search") { state.locHelp = ""; $("locNotice").hidden = true; return; }
+    if (state.locHelp) { showLocationHelp(state.locHelp); return; }
+    const p = state.place;
+    if (deviceInIndia() && p && p.country && p.country !== "India" && (state.via === "gps" || state.via === "ip")) {
+        showLocationHelp(`Your browser says you are in ${p.name}, ${p.country} - but your device is set to Indian time, so this looks wrong. ` +
+            `A VPN or an inaccurate network location is the usual cause. Pick your city:`);
+    } else {
+        $("locNotice").hidden = true;
+    }
+}
+$("cityChips").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-city]");
+    if (!b) return;
+    $("citySearch").value = b.dataset.city;
+    $("searchCityButton").click();            // remembers the choice
+});
+$("locNoticeClose").addEventListener("click", () => { $("locNotice").hidden = true; });
 
 function rememberViewed(city) {
     let list = [];
@@ -547,11 +628,11 @@ function getGPS() {
 }
 
 async function ipLocation() {
-    // last-resort: approximate location from the internet connection
+    // approximate position from the internet connection
     try {
         const r = await fetch("https://ipwho.is/");
         const d = await r.json();
-        if (d && d.success && has(d.latitude)) return { lat: d.latitude, lon: d.longitude, city: d.city };
+        if (d && d.success && has(d.latitude)) return { lat: d.latitude, lon: d.longitude, city: d.city, country: d.country };
     } catch (e) { /* ignore */ }
     return null;
 }
@@ -559,49 +640,95 @@ async function ipLocation() {
 async function detectLocation({ manual = false } = {}) {
     $("placeLabel").textContent = "Detecting your location...";
     setStatus("", "Locating...");
+    state.locHelp = "";
+    let rejected = "";
 
+    // 1) the browser's own position (GPS / Wi-Fi) - only if it is believable
     try {
         const pos = await getGPS();
-        // Let the backend name the place from the GPS fix; /environment does it for us
-        await loadEnvironment({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-        return;
+        const lat = pos.coords.latitude, lon = pos.coords.longitude;
+        if (plausible(lat, lon)) {
+            state.pendingVia = "gps";
+            await loadEnvironment({ lat, lon });
+            return;
+        }
+        rejected = `Your browser reported a position outside India (${lat.toFixed(1)}°, ${lon.toFixed(1)}°) while your device is set to Indian time, so AirSense ignored it. ` +
+            `This is usually a VPN, a proxy or an inaccurate Wi-Fi location.`;
     } catch (e) {
         console.warn("GPS failed:", e.message);
-        if (manual) toast("Location permission is blocked. Allow it in the browser address bar, or search a city.", 5000);
+        if (manual) toast("Location permission is blocked. Allow it in the browser address bar, or pick your city.", 5000);
     }
 
+    // 2) approximate position from the internet connection - same believability check
     const ip = await ipLocation();
-    if (ip) {
-        toast("Using approximate location (GPS not available).");
+    if (ip && plausible(ip.lat, ip.lon)) {
+        state.pendingVia = "ip";
+        state.locHelp = (rejected ? rejected + " " : "") + "Showing the approximate location of your internet connection. Not right? Pick your city:";
+        if (!rejected) { state.locHelp = ""; toast("Using approximate location (GPS not available)."); }
         await loadEnvironment({ lat: ip.lat, lon: ip.lon, city: ip.city });
         return;
     }
+    if (ip && !rejected) {
+        rejected = `Your internet connection points to ${ip.city || ip.country} (outside India) while your device is set to Indian time - probably a VPN.`;
+    }
 
+    // 3) the city saved earlier
     const saved = loadSavedPlace();
     if (saved) {
-        toast(`Showing your last location: ${saved.name}`);
+        state.pendingVia = "saved";
+        state.locHelp = (rejected || "Could not detect your location.") + ` Showing your saved city (${saved.name}). Pick your city if it is wrong:`;
         await loadEnvironment({ lat: saved.latitude, lon: saved.longitude, city: saved.name });
         return;
     }
 
-    $("placeLabel").textContent = "Location unavailable";
-    setStatus("stale", "Search a city");
+    // 4) nothing believable - ask, with one-click cities
+    $("placeLabel").textContent = "Location unknown";
+    setStatus("stale", "Pick your city");
     $("liveAqi").classList.remove("skeleton");
-    $("aqiStatus").textContent = "Search a city to begin";
-    toast("Could not detect your location — type a city in the search box.");
+    $("liveAqi").textContent = "--";
+    $("aqiStatus").textContent = "Pick your city to begin";
+    showLocationHelp((rejected || "Could not detect your location.") + " Pick your city:");
 }
 
 // ---------- search ----------
 $("searchCityButton").addEventListener("click", () => {
     const city = $("citySearch").value.trim();
     if (!city) { $("citySearch").focus(); return; }
+    localStorage.setItem("airsense_manual", "1");      // remember: do not auto-detect over a city the user chose
+    state.pendingVia = "search";
     loadEnvironment({ city });
 });
 $("citySearch").addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); $("searchCityButton").click(); }
 });
 $("citySearch").addEventListener("focus", (e) => e.target.select());
-$("useLocationButton").addEventListener("click", () => detectLocation({ manual: true }));
+$("useLocationButton").addEventListener("click", () => {
+    localStorage.removeItem("airsense_manual");
+    detectLocation({ manual: true });
+});
+
+// =====================================================
+// AQI STANDARD SWITCH  (Indian NAQI  <->  US AQI)
+// =====================================================
+function setStandard(std) {
+    settings.aqiStandard = std;
+    saveSettings();
+    const sel = $("setStandard");
+    if (sel) sel.value = std;
+    if (state.env) {
+        renderAQI(state.env.air_quality, (state.env.errors || {}).air_quality);
+        showPrediction(state.selected);
+        renderIoT(state.env.iot, state.env);
+    }
+}
+document.querySelectorAll(".std-toggle button").forEach((b) => b.addEventListener("click", () => setStandard(b.dataset.std)));
+$("setStandard").value = currentStd();
+$("setStandard").addEventListener("change", (e) => setStandard(e.target.value));
+
+// "Why is this different from other websites?"
+$("explainButton").addEventListener("click", () => $("explainOverlay").classList.add("active"));
+$("closeExplain").addEventListener("click", () => $("explainOverlay").classList.remove("active"));
+$("explainOverlay").addEventListener("click", (e) => { if (e.target === $("explainOverlay")) $("explainOverlay").classList.remove("active"); });
 
 // =====================================================
 // SETTINGS PAGE
@@ -622,8 +749,128 @@ $("setNotify").addEventListener("change", async (e) => {
 });
 $("clearPlaceButton").addEventListener("click", () => {
     localStorage.removeItem("airsense_place");
+    localStorage.removeItem("airsense_manual");
     toast("Saved location cleared.");
 });
+
+// =====================================================
+// IoT SENSOR  vs  EXTERNAL API   (shown side by side, never merged)
+// =====================================================
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+
+function fmtTime(ts) {
+    if (!ts) return "";
+    const d = new Date(String(ts).replace(" ", "T"));
+    if (Number.isNaN(d.getTime())) return String(ts);
+    const t = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { day: "numeric", month: "short" }) + ", " + t;
+}
+
+function agoText(sec) {
+    if (!has(sec)) return "";
+    if (sec < 60) return `${sec} sec ago`;
+    if (sec < 3600) return `${Math.round(sec / 60)} min ago`;
+    if (sec < 86400) return `${Math.round(sec / 3600)} h ago`;
+    return `${Math.round(sec / 86400)} days ago`;
+}
+
+const num1 = (v) => (Number.isInteger(v) ? String(v) : String(Math.round(v * 10) / 10));
+
+function renderChips(iot, env) {
+    const apiOk = !!(env && (env.air_quality || env.weather));
+    const chips = [];
+    if (!iot) chips.push(["", "IoT Sensor – checking..."]);
+    else if (iot.status === "online") chips.push(["ok", "IoT Sensor – Connected"]);
+    else if (iot.status === "offline") chips.push(["warn", "IoT Sensor – Offline"]);
+    else if (iot.status === "error") chips.push(["bad", "IoT Sensor – Status unavailable"]);
+    else chips.push(["", "IoT Sensor – Not Connected"]);
+    chips.push(apiOk ? ["ok", "External API – Available"] : ["bad", "External API – Unavailable"]);
+    $("sourceChips").innerHTML = chips.map(([cls, text]) => `<span class="src-chip ${cls}">${text}</span>`).join("");
+}
+
+function renderIoT(iot, env) {
+    renderChips(iot, env);
+    const body = $("iotBody");
+    if (!iot) { body.innerHTML = `<p class="empty-note">Checking for an IoT device at this location...</p>`; return; }
+
+    const dev = iot.device;
+    const where = dev ? `${esc(dev.location_name)}${dev.state ? ", " + esc(dev.state) : ""}` : "";
+    const deviceLine = dev ? `
+        <div class="iot-device">
+            📟 <b>${esc(dev.device_id)}</b>${dev.name && dev.name !== dev.device_id ? " · " + esc(dev.name) : ""}
+            · installed at <b>${where}</b>
+            <span class="pill ${iot.status === "online" ? "online" : "offline"}">● ${iot.status === "online" ? "Online" : "Offline"}</span>
+            <small>last seen ${esc(fmtTime(iot.last_seen))} (${esc(agoText(iot.last_seen_ago_s))})</small>
+        </div>` : "";
+
+    if (iot.status === "none") {
+        body.innerHTML = `<div class="iot-none"><b>No IoT Device Connected at This Location</b><span>Data source: External APIs only</span></div>`;
+        return;
+    }
+    if (iot.status === "error") {
+        body.innerHTML = `<div class="iot-note">${esc(iot.message || "IoT status unavailable")}. External API data below is not affected.</div>`;
+        return;
+    }
+    if (iot.status === "offline") {
+        body.innerHTML = deviceLine + `<div class="iot-note">${esc(iot.message)}. Its last readings are not shown as live data - this dashboard is using external API data only.</div>`;
+        return;
+    }
+
+    // ---- online: two clearly labelled columns
+    const r = iot.reading || {};
+    const w = (env && env.weather) || null;
+    const aq = (env && env.air_quality) || null;
+    const std = currentStd();
+    const apiAqi = aqiValue(aq, std);
+    const rows = [
+        ["Temperature", "°C", r.temperature, w && w.temperature],
+        ["Humidity", "%", r.humidity, w && w.humidity],
+        ["Pressure", " hPa", r.pressure, w && w.pressure],
+        ["PM2.5", " µg/m³", r.pm25, aq && aq.pm25],
+        ["PM10", " µg/m³", r.pm10, aq && aq.pm10],
+        ["CO", " mg/m³", r.co, aq && aq.co],
+        ["NO₂", " µg/m³", r.no2, aq && aq.no2],
+        ["O₃", " µg/m³", r.o3, aq && aq.o3],
+        ["SO₂", " µg/m³", r.so2, aq && aq.so2],
+        ["MQ gas sensor", " (raw)", r.mq, null],
+        ["AQI", "", r.aqi, apiAqi, "device-reported", stdName(std)],
+    ].filter((row) => has(row[2]) || has(row[3]));
+
+    const cell = (v, unit, note) => has(v)
+        ? `<b>${num1(v)}</b>${esc(unit)}${note ? `<small>${esc(note)}</small>` : ""}`
+        : `<span class="dash">—</span>`;
+
+    const sensorTime = iot.sensor_time ? `sensor time ${fmtTime(iot.sensor_time)}` : "device sent no valid clock";
+    const apiTime = `${aq && aq.measured_at ? "air data from " + fmtTime(aq.measured_at) + " · " : ""}fetched ${fmtTime(env && env.updated_at)}`;
+
+    body.innerHTML = deviceLine + `
+        <div class="src-table-wrap"><table class="src-table">
+            <thead><tr>
+                <th>Parameter</th>
+                <th><span class="tag iot">IoT sensor</span><small>${esc(sensorTime)} · received ${esc(fmtTime(iot.last_seen))}</small></th>
+                <th><span class="tag api">External API</span><small>${esc(apiTime)}</small></th>
+            </tr></thead>
+            <tbody>${rows.map(([label, unit, iv, av, inote, anote]) =>
+                `<tr><td>${esc(label)}</td><td>${cell(iv, unit, inote)}</td><td>${cell(av, unit, anote)}</td></tr>`).join("")}</tbody>
+        </table></div>
+        <p class="empty-note" style="margin-top:12px">Each value is shown exactly as its source reported it - the two sources are never averaged or merged.</p>`;
+}
+
+function iotLoading() { renderIoT(null, null); }
+
+async function refreshIoT() {
+    // light refresh of the IoT part only (every 30 s) so Online/Offline stays truthful
+    const p = state.place;
+    if (!p || !state.env) return;
+    try {
+        const q = new URLSearchParams({ lat: p.latitude, lon: p.longitude, city: p.name });
+        const r = await fetch(`${API_BASE}/iot/status?${q}`);
+        if (!r.ok || state.place !== p) return;            // user switched place meanwhile: drop this answer
+        state.env.iot = await r.json();
+        renderIoT(state.env.iot, state.env);
+    } catch (e) { /* backend busy - try again next time */ }
+}
+setInterval(() => { if (!document.hidden) refreshIoT(); }, 30000);
 
 // =====================================================
 // ANALYTICS OVERLAY
@@ -636,10 +883,11 @@ async function openAnalytics() {
     document.body.style.overflow = "hidden";
 
     const env = state.env || {};
-    const aqi = env.air_quality && env.air_quality.aqi;
+    const std = currentStd();
+    const aqi = aqiValue(env.air_quality, std);
     $("analyticsSub").textContent = state.place ? `${state.place.name} · last 24 hours` : "AI powered air intelligence";
     $("analyticsAQI").textContent = has(aqi) ? aqi : "--";
-    $("analyticsAQIStatus").textContent = levelOf(aqi).label;
+    $("analyticsAQIStatus").textContent = levelOf(aqi, std).label + " · " + stdName(std);
     $("analyticsTemp").textContent = env.weather && has(env.weather.temperature) ? `${Math.round(env.weather.temperature)}°C` : "--";
     $("analyticsHumidity").textContent = env.weather && has(env.weather.humidity) ? `${env.weather.humidity}%` : "--";
     $("analyticsTraffic").textContent = env.traffic && has(env.traffic.current_speed) ? `${Math.round(env.traffic.current_speed)} km/h` : "--";
@@ -664,7 +912,7 @@ async function openAnalytics() {
             data: {
                 labels: d.records.map((x) => new Date(x.timestamp.replace(" ", "T")).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })),
                 datasets: [{
-                    label: "AQI", data: d.records.map((x) => x.aqi),
+                    label: stdName(std), data: d.records.map((x) => (std === "us" ? x.us_aqi : x.aqi)),
                     borderColor: "#35d39a", backgroundColor: "rgba(53,211,154,.15)",
                     fill: true, tension: 0.4, borderWidth: 3, pointRadius: 2,
                 }],
@@ -696,7 +944,11 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAnaly
 // =====================================================
 (async function start() {
     const saved = loadSavedPlace();
-    if (settings.autoLocate) {
+    if (saved && localStorage.getItem("airsense_manual") === "1") {
+        // the user picked this city themselves - keep it (press the target button to re-detect)
+        state.pendingVia = "saved";
+        await loadEnvironment({ lat: saved.latitude, lon: saved.longitude, city: saved.name });
+    } else if (settings.autoLocate) {
         await detectLocation();
     } else if (saved) {
         await loadEnvironment({ lat: saved.latitude, lon: saved.longitude, city: saved.name });

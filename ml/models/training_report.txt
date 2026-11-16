@@ -1,0 +1,35 @@
+AirSense model training report  -  2026-11-15 08:02:10
+Cities: 1   hourly rows: 14,653   data: 2025-01-01 .. 2026-09-03
+MAE = average error in AQI points (lower is better).  'persistence' = 'AQI stays the same as now'.
+
+naqi_1h  (test period, 2,824 hours)   chosen: avg
+  model                  MAE    RMSE      R2
+  persistence           3.61    4.83   0.951
+  random_forest         0.87    1.31   0.996
+  xgboost               0.78    1.33   0.996
+  catboost              0.75    1.12   0.997
+  xgb+cat average       0.75    1.18   0.997
+
+naqi_6h  (test period, 2,819 hours)   chosen: avg
+  model                  MAE    RMSE      R2
+  persistence          18.49    24.0  -0.207
+  random_forest         5.01     7.0   0.897
+  xgboost               4.64     6.8   0.903
+  catboost              4.55    6.17    0.92
+  xgb+cat average        4.5    6.29   0.917
+
+us_1h  (test period, 2,826 hours)   chosen: avg
+  model                  MAE    RMSE      R2
+  persistence           2.35    3.74   0.934
+  random_forest         1.45    2.31   0.975
+  xgboost               1.38    2.16   0.978
+  catboost              1.36     2.1   0.979
+  xgb+cat average       1.35    2.11   0.979
+
+us_6h  (test period, 2,812 hours)   chosen: avg
+  model                  MAE    RMSE      R2
+  persistence           9.86   13.84   0.097
+  random_forest         7.75   10.45   0.486
+  xgboost               7.45   10.14   0.515
+  catboost              7.39    9.99    0.53
+  xgb+cat average       7.36    9.98   0.531
