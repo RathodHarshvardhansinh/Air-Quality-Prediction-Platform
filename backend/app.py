@@ -510,19 +510,36 @@ def save_data():
     return jsonify({"message": "Data Saved Successfully", "city": name})
 
 
+
 def _check_libraries():
-    """Tell the user in plain words if a library is missing (the usual 'Prediction unavailable' cause)."""
+    """Check required libraries and report optional ML packages."""
     import importlib.util
     import sys
-    missing = [m for m in ("pandas", "numpy", "xgboost", "catboost") if importlib.util.find_spec(m) is None]
+
+    missing = [
+        m for m in ("pandas", "numpy")
+        if importlib.util.find_spec(m) is None
+    ]
+
+    optional_missing = [
+        m for m in ("xgboost", "catboost")
+        if importlib.util.find_spec(m) is None
+    ]
+
     if missing:
         print("\n" + "!" * 70)
-        print("  OPTIONAL LIBRARIES NOT INSTALLED:", ", ".join(missing))
-        print("  The forecast still works (built-in lite mode), but the full XGBoost + CatBoost model is better.")
-        print("  To install them into THIS Python (the one that started the server):\n")
-        print(f'     "{sys.executable}" -m pip install -r requirements.txt')
-        print("\n  then restart the server.")
+        print("  REQUIRED PREDICTION LIBRARIES MISSING:", ", ".join(missing))
+        print("  Install them using:")
+        print(f'     "{sys.executable}" -m pip install pandas numpy')
         print("!" * 70 + "\n")
+
+    if optional_missing:
+        print("\nOptional ML packages not installed:", ", ".join(optional_missing))
+        print("AirSense will use its built-in XGBoost Lite prediction mode.")
+        print("For the full model locally, install with:")
+        print(f'     "{sys.executable}" -m pip install xgboost catboost')
+        print()
+
 
 
 if __name__ == "__main__":

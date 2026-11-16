@@ -1,0 +1,12 @@
+backend/venv/
+backend/.venv/
+.venv/
+venv/
+**/__pycache__/
+*.pyc
+.git/
+.env
+.env.*
+!.env.example
+ml/legacy/
+ml/train_models.py
